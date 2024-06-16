@@ -1,12 +1,11 @@
+
+------------------------------------------------
+JAK SPUSTIT APLIKACI
+------------------------------------------------
+
 Ve složkách se nacházejí jednotlivé projekty aplikace. V Dockerfile je definována její kompilace, v souboru docker-compose.yml jsou definovány kontejnery pro databázové systémy a samotnou aplikaci. 
 Pokud příkaz na compose aplikace spouštíme poprvé a není tím pádem ještě vytvořené volume, nic neměníme. Pokud ale již vytvořeno je, změníme v souboru .env jedinou proměnnou, která tam 
-je, na false, a tím pádem se již nebude vytvářet schéma. Mimo jiné je na řádce 37 v docker-compose.yml je číslo 90. To udává, kolik vteřin se má čekat, než se skript na vytvoření schématu 
-spustí - po vytvoření kontejneru s databází. Jelikož image Microsoft SQL Server neposkytuje jinou možnost jak schéma vytvořit, je to udělané takhle nepěkně pomocí dalšího kontejneru. Jelikož server ještě chvíli
-nabíhá, tak je potřeba chvíli počkat s vytvářením schématu. Kdyby to váš počítač nestihl za 90 vteřin spustit, je možné tento čas zvýšit. U mě to trvá asi 15 vteřin, číslo jsem pro jistotu 
-velmi nadsadil. Když se schéma správně vytvoří, ukáže se zpráva s několika vykřičníky, že lze aplikaci používat. Pravděpodobně po naběhnutí kontejneru s neo4j, se vám nebude v logu nic 
-vypisovat, a poté po přibližně minutě dojde k vytvoření databázové struktury. To, že byla databáze s účty úspěšně vytvořena, je oznámeno zprávou 
-"Database with accounts has correct structure, you can use the app!!!!!!!!!!!!!!!!!!!" (vykřičkníky jsou tam, aby to bylo vidět mezi ostatními zprávami). Aplikaci poté můžete testovat
-na localhost na portu 9000
+je, na false, a tím pádem se již nebude vytvářet schéma. Aplikaci poté můžete vyzkoušet na localhost na portu 9000
 
 V kořenové složce s Dockerfile lze aplikaci jednoduše spustit příkazem 
 
