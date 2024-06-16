@@ -1,0 +1,189 @@
+﻿
+@* Page which shows specific team. It is possible to change its players and see tournament where the team participates. *@
+
+@page "/teamsManagement/{TeamId}"
+
+@attribute [Authorize]
+
+@using ChessTournamentManager.CodeStructures
+@using ChessTournamentManager.Controllers
+@using ChessTournamentManager.Data
+@using ChessTournamentManager.DataServices
+@using ChessTournamentManager.LanguageAssets.TeamManagement
+@using ChessTournamentMate.Shared
+@using DatabaseCommunicator.Models
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.SignalR.Client
+@using Microsoft.Extensions.Localization
+@inject NavigationManager Navigation
+@inject NavigationUrls NavigationToUrls
+
+@inject UserInformation UserInformation
+
+@inject TeamManagementController TeamManagementController
+@inject TeamController TeamController
+@inject IStringLocalizer<TeamManagementLabels> _localizer;
+
+
+@rendermode @(new InteractiveServerRenderMode(false))
+@attribute [StreamRendering]
+
+<title>@_localizer["teamManagementTitle"]</title>
+
+<QuestionMarkWithHelp ToolTipText="@_localizer["teamManagementToolTip"]" />
+
+<Button Color="ButtonColor.Success" @onclick="() => NavigationToUrls.ToTeamsManagementPage()">@_localizer["teamManagementToManagedTeams"]</Button>
+
+<UIResponseRender Message="_notAuthorizedMessage"></UIResponseRender>
+
+
+@if (_isManager)
+{
+	<ConfirmDialog @ref="_dialog" />
+	@if(_canDeleteTeam)
+	{
+		<Button Color="ButtonColor.Danger" @onclick="DeleteTeam">@_localizer["teamManagementDeleteTeam"]</Button>
+	}
+
+	<div class="mt-3">
+		<Tabs>
+			<Tab Title="@_localizer["teamManagementTabPlayers"]" IsActive="true">
+				<Content>
+					<TeamPlayerManagement TeamId="@TeamId" CanModifyTeam="_canModifyTeam"></TeamPlayerManagement>
+				</Content>
+			</Tab>
+			<Tab Title="@_localizer["teamManagementTabTournaments"]">
+				<Content>
+					<TeamTournamentsManagement TeamId="@TeamId"></TeamTournamentsManagement>
+				</Content>
+			</Tab>
+		</Tabs>
+	</div>
+}
+
+   
+
+@code{
+
+	/// <summary>
+	/// Id of the team
+	/// </summary>
+	[Parameter]
+	public string TeamId { get; set; }
+
+	/// <summary>
+	/// Players in the team
+	/// </summary>
+	public List<Player> Players { get; set; } = [];
+
+	/// <summary>
+	/// Information about team
+	/// </summary>
+	public Team? Team { get; set; } = new();
+
+	/// <summary>
+	/// Information that user cannot edit the team
+	/// </summary>
+	private QuickResponseMessage? _canEditTeamMessage;
+
+	/// <summary>
+	/// User is not logged in error
+	/// </summary>
+	private QuickResponseMessage? _notAuthorizedMessage;
+
+	/// <summary>
+	/// Logged user can modify the team
+	/// </summary>
+	private bool _canModifyTeam = false;
+
+	/// <summary>
+	/// Logged user is the manager of the team
+	/// </summary>
+	private bool _isManager = false;
+
+	/// <summary>
+	/// It is possible to delete team
+	/// </summary>
+	private bool _canDeleteTeam = false;
+
+	private ConfirmDialog _dialog = default!;
+
+	/// <summary>
+	/// Shows information if the user can manage the team
+	/// </summary>
+	/// <returns></returns>
+	private async Task SetCanModifyTeam()
+	{
+		_canEditTeamMessage = await TeamManagementController.CanModifyTeam(TeamId);
+		_canModifyTeam = _canEditTeamMessage.MessageType == QuickResponseMessageTypes.Success;
+	}
+
+	/// <summary>
+	/// Returns if the logged user is the manager of the team - he/she can manage the team
+	/// </summary>
+	/// <returns></returns>
+	private async Task CheckIfUserIsManager()
+	{
+		string accountId = (await UserInformation.GetLoggedUserIdAsync())!;
+		_isManager = await TeamManagementController.IsUserManagerOfTeam(TeamId, accountId);
+	}
+
+	protected override async Task OnInitializedAsync()
+	{
+		_isManager = false;
+
+		await CheckIfUserIsManager();
+
+		if (_isManager)
+		{
+			_notAuthorizedMessage = null;
+			await SetCanModifyTeam();
+			await InvokeAsync(StateHasChanged);
+		}
+		else
+		{
+			_notAuthorizedMessage = new UnsuccessfulMessage(@_localizer["teamManagementNotManager"]);
+		}
+
+		_canDeleteTeam = await CanDeleteTeam();
+
+		await InvokeAsync(StateHasChanged);
+	}
+
+	/// <summary>
+	/// Deletes team from the database
+	/// </summary>
+	/// <returns></returns>
+	private async Task DeleteTeam()
+	{
+		var buttonsTexts = new ConfirmDialogOptions
+			{
+				YesButtonText = _localizer["teamManagementDeleteYes"],
+				YesButtonColor = ButtonColor.Danger,
+				NoButtonText = _localizer["teamManagementDeleteNo"],
+				NoButtonColor = ButtonColor.Secondary
+			};
+
+		bool delete = await _dialog.ShowAsync(title: _localizer["teamManagementDeleteDialogHeader"], message1: _localizer["teamManagementDeleteDialogDescription"], buttonsTexts);
+
+		if (delete)
+		{
+			if (await CanDeleteTeam())
+			{
+				await TeamManagementController.DeleteTeam(TeamId);
+				NavigationToUrls.ToTeamsManagementPage();
+			}
+		}
+
+	}
+
+	/// <summary>
+	/// Returns if the deletion of the team is possible
+	/// </summary>
+	/// <returns></returns>
+	private async Task<bool> CanDeleteTeam()
+	{
+		return (await TeamController.GetTournamentsOfTeam(TeamId)).Count() == 0;
+	}
+
+}

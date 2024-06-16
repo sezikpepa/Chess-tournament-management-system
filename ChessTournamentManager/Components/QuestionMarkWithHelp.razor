@@ -1,0 +1,33 @@
+﻿
+@* Shows question mark located in a small circle. After a user hover a mouse over this question mark it shows text. Serves as a tooltip, where concepts of the page can be explained. *@
+
+@if(ToolTipText is not null)
+{
+    <div class="row">
+        <div class="col d-flex justify-content-end">
+            <div>
+                <div class="mb-2 float-right">
+                    <Tooltip Title="@ToolTipText">
+                        <Icon Name="IconName.QuestionCircle"
+                            Size="IconSize.x3"
+                            Color="IconColor.Primary">
+                        </Icon>
+                    </Tooltip>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+
+
+@code {
+
+    /// <summary>
+    /// Text which will be shown after a hover over this component.
+    /// </summary>
+    [Parameter]
+    public string? ToolTipText { get; set; }
+
+}

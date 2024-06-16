@@ -1,0 +1,37 @@
+﻿
+@* Page where it is possible to filter all tournaments saved in the database. *@
+
+@page "/tournaments";
+
+@rendermode @(new InteractiveServerRenderMode(false))
+@attribute [StreamRendering]
+
+@using ChessTournamentManager.CodeStructures
+@using ChessTournamentManager.Controllers
+@using ChessTournamentManager.DataServices
+@using ChessTournamentManager.LanguageAssets.Tournaments
+@using ChessTournamentMate.Shared
+@using DatabaseCommunicator.Models
+@using Microsoft.AspNetCore.SignalR.Client
+@using Microsoft.Extensions.Localization
+
+@inject NavigationManager Navigation
+@inject NavigationUrls NavigationToUrls
+
+@inject IStringLocalizer<TournamentsLabels> _localizer
+
+@inject TournamentController TournamentController;
+
+
+<title>@_localizer["pageTitle"]</title>
+
+
+<QuestionMarkWithHelp ToolTipText="@_localizer["questionMarkTextTooltip"]">
+</QuestionMarkWithHelp>
+
+<TournamentsWithFiltering></TournamentsWithFiltering>
+
+
+@code {
+
+}

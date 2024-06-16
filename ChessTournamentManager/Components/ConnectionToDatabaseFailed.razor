@@ -1,0 +1,28 @@
+﻿@* 
+Information that the loading from database failed *@
+
+@using ChessTournamentManager.LanguageAssets.TournamentManagementLabels
+@using ChessTournamentMate.Shared
+@using Microsoft.Extensions.Localization
+
+@inject IStringLocalizer<TournamentManagementLabels> _localizer
+
+@rendermode InteractiveServer
+
+@if (Visible)
+{
+	<UIResponseRender Message="@(new UnsuccessfulMessage(_localizer["databaseCannotConnect"]))"></UIResponseRender>
+}
+
+
+
+
+@code {
+
+	/// <summary>
+	/// Information should be shown in the UI
+	/// </summary>
+	[Parameter]
+	public bool Visible { get; set; } = true;
+
+}

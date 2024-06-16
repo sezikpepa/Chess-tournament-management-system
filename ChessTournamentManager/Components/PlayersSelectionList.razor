@@ -1,0 +1,117 @@
+﻿
+@* Shows registered players in the tournament. Manager can then manipulate with these players *@
+
+@using ChessTournamentManager.LanguageAssets.TournamentManagementLabels
+@using DatabaseCommunicator.Models
+@using Microsoft.Extensions.Localization
+
+@inject IStringLocalizer<TournamentManagementLabels> _localizer
+
+
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th class="col-4">@_localizer["registeredPlayersFirstName"]</th>
+                <th class="col-4">@_localizer["registeredPlayersLastName"]</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (RegisteredParticipants is not null)
+            {
+                @foreach (Player participant in RegisteredParticipants)
+                {
+                    <tr>
+                        <th class="col-4">@participant.FirstName</th>
+                        <th class="col-4">@participant.LastName</th>
+                        <th class="col-1">
+                            <Button Color="ButtonColor.Primary" Disabled="participant.AccountId is null" @onclick="(args)=> ShowPlayerProfile(args, participant.Id)">
+                                <Icon Name="IconName.Search"></Icon>
+                            </Button>
+                        </th>
+                        <th class="col-1">
+                            <Button Color="ButtonColor.Primary" @onclick="(args)=> ShowPlayerTournamentResults(args, participant.Id)">
+                                <Icon Name="IconName.GraphUpArrow"></Icon>
+                            </Button>
+                        </th>
+                        <th class="col-1">
+                            @if (!DeletePlayersDisabled)
+                            {
+                                <Button Color="ButtonColor.Danger" @onclick="((args) => OnDeleteParticipant(args, participant.Id))">
+                                    <Icon Name="IconName.XLg"></Icon>
+                                </Button>
+                            }
+                        </th>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+
+    /// <summary>
+    /// Registered players in the tournament.
+    /// </summary>
+    [Parameter]
+    public IEnumerable<Player> RegisteredParticipants { get; set; } = [];
+
+    /// <summary>
+    /// Function which should be called to show information about selected player
+    /// </summary>
+    [Parameter]
+    public EventCallback<string> PlayerSelectedForInfo { get; set; }
+
+    /// <summary>
+    /// Function which should be called to show performance of a selected player in the tournament.
+    /// </summary>
+    [Parameter]
+    public EventCallback<string> PlayerSelectedForPerformance { get; set; }
+
+    /// <summary>
+    /// Function which should be called to remove a selected player from the tournament.
+    /// </summary>
+    [Parameter]
+    public EventCallback<string> PlayerSelectedForDelete { get; set; }
+
+    /// <summary>
+    /// If this is set to True, players cannot be removed from the tournament, via a button.
+    /// </summary>
+    [Parameter]
+    public bool DeletePlayersDisabled { get; set; } = false;
+
+    /// <summary>
+    /// Shows page with information about player
+    /// </summary>
+    /// <param name="e">null</param>
+    /// <param name="id">Id of the player</param>
+    /// <returns></returns>
+    private async Task ShowPlayerProfile(MouseEventArgs e, string id)
+    {
+        await PlayerSelectedForInfo.InvokeAsync(id);
+    }
+
+    /// <summary>
+    /// Shows all matches of the player in the tournament
+    /// </summary>
+    /// <param name="e">null</param>
+    /// <param name="id">Id of the player</param>
+    /// <returns></returns>
+    private async Task ShowPlayerTournamentResults(MouseEventArgs e, string id)
+    {
+        await PlayerSelectedForPerformance.InvokeAsync(id);
+    }
+
+    /// <summary>
+    /// Deletes player from the tournament - not yet saved
+    /// </summary>
+    /// <param name="e">null</param>
+    /// <param name="id">Id of the player</param>
+    /// <returns></returns>
+    private async Task OnDeleteParticipant(MouseEventArgs e, string id)
+    {
+        await PlayerSelectedForDelete.InvokeAsync(id);
+    }
+}

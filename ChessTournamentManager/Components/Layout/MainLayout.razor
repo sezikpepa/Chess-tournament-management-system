@@ -1,0 +1,45 @@
+﻿@using ChessTournamentManager.CodeStructures
+@inherits LayoutComponentBase
+
+
+@inject UserInformation UserInformation
+
+
+<div class="bb-page">
+
+    @if (!_loading)
+    {
+        //Menu on the left
+        <MainPanel></MainPanel>
+
+        <main>
+            @* Top section *@
+            <div class="bb-top-row px-4 d-flex justify-content-end">
+                <CultureSelector></CultureSelector>
+                <AccountBar></AccountBar>
+            </div>
+
+            <article class="content px-4">
+                @* Place where page content based on URL is shown *@
+                <div class="py-2">
+                    @Body
+                </div>
+            </article>
+        </main>
+    }
+    
+
+</div>
+
+@code {
+
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _loading = true;
+        await UserInformation.GetLoggedUserIdAsync();
+        _loading = false;
+    }
+
+}

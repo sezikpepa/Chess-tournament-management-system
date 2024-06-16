@@ -1,0 +1,29 @@
+﻿
+@* Page which shows where users can search for specific player in the database *@
+
+
+@page "/players"
+@using ChessTournamentManager.LanguageAssets.PlayerService
+@using Microsoft.Extensions.Localization
+
+@rendermode @(new InteractiveServerRenderMode(false))
+@attribute [StreamRendering]
+
+@using ChessTournamentManager.CodeStructures
+
+@inject NavigationUrls NavigationUrls
+@inject IStringLocalizer<PlayerServiceLabels> _localizator
+
+<title>@_localizator["allPlayersPageTitle"]</title>
+
+<QuestionMarkWithHelp ToolTipText="@_localizator["allPlayersPageToolTip"]">
+
+</QuestionMarkWithHelp>
+
+<PlayersListRender ShowPlayerProfile="(playerId) => NavigationUrls.ToPlayerProfile(playerId)" ActionName="" HideAction="true"></PlayersListRender>
+
+
+@code {
+
+
+}

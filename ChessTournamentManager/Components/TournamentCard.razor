@@ -1,0 +1,174 @@
+﻿@using ChessTournamentManager.LanguageAssets.TournamentCard
+@using DatabaseCommunicator.Models
+@using Microsoft.Extensions.Localization
+
+@inject IStringLocalizer<TournamentCardLabels> _localizer
+
+<div class="TournamentCard">
+
+	@* default picture downloaded from https://pixabay.com/vectors/chess-knight-meeple-black-game-36320/ *@
+	@if(Tournament.ProfilePictureName is null)
+	{
+		<img class="card-img-top img-thumbnail tournamentPicture" src="/ProfilePictures/defaultTournamentPicture.svg" />
+	}
+	else
+	{
+		@* GUID in image URL is to disable caching *@
+		<img class="card-img-top img-thumbnail tournamentPicture" src="ProfilePictures/@(Tournament.ProfilePictureName)?id=@(Guid.NewGuid().ToString())" />
+	}
+	<div class="card-body">
+		<div class="overFlowHidden">
+			@if (Tournament?.TournamentName.Length > MaxTextLength)
+			{
+				<h5 class="noWrap">@(Tournament?.TournamentName.Substring(0, MaxTextLength).Trim() + "...")</h5>
+			}
+			else
+			{
+				<h5 class="noWrap">@Tournament?.TournamentName</h5>
+			}
+		</div>
+		
+
+		<div class="overFlowHidden">
+			<h6 class="noWrap">@Tournament?.ShortDescription</h6>
+		</div>
+
+
+		@if (ShowTournamentInformation)
+		{
+			<Button Class="form-control mt-1" Color="ButtonColor.Info" @onclick="OnTournamentInformationCallBack">@_localizer["showDetail"]</Button>
+		}
+
+		<AuthorizeView>
+			<Authorized>
+				@if (ShowRegister == true)
+				{
+					<Button Class="form-control mt-1" Color="ButtonColor.Success" @onclick="RegisterUserForTournament">@_localizer["register"]</Button>
+				}
+						
+				@if (ShowManagerTournament == true)
+				{
+					<Button Class="form-control mt-1" Color="ButtonColor.Primary" @onclick="OnManageButtonClicked">@_localizer["manage"]</Button>
+				}
+				@if (ShowTournamentUnRegister)
+				{
+					<Button Class="form-control mt-1" Color="ButtonColor.Danger" @onclick="OnTournamentUnregister">@_localizer["unregister"]</Button>
+				}
+			</Authorized>
+			<NotAuthorized>
+				@if (ShowRegister == true)
+				{
+					<Tooltip Title="@_localizer["cannotRegisterTooltip"]">
+						<Button Class="form-control mt-1" Color="ButtonColor.Success" Disabled="true">@_localizer["register"]</Button>
+					</Tooltip>
+				}
+				@if (ShowManagerTournament == true)
+				{
+					<Button Class="form-control mt-1" Color="ButtonColor.Primary" Disabled="true">@_localizer["manage"]</Button>
+				}
+				@if (ShowTournamentUnRegister)
+				{
+					<Button Class="form-control mt-1" Color="ButtonColor.Danger" Disabled="true">@_localizer["unregister"]</Button>
+				}
+			</NotAuthorized>				
+		</AuthorizeView>
+	</div>
+</div>
+
+
+
+
+
+
+
+
+@code {
+
+	/// <summary>
+	/// CSS class which will be used on all buttons
+	/// </summary>
+	[Parameter]
+	public string ClassForButtons { get; set; } = "ms-1";
+
+	/// <summary>
+	/// Tournament which whose information will be shown in the card
+	/// </summary>
+	[Parameter]
+	public Tournament Tournament { get; set; }
+
+	/// <summary>
+	/// Button to cancel registration should be shown
+	/// </summary>
+	[Parameter]
+	public bool ShowTournamentUnRegister { get; set; } = false;
+
+	/// <summary>
+	/// Method which will handle cancellation of the registration
+	/// </summary>
+	[Parameter]
+	public EventCallback<string> TournamentUnRegister { get; set; }
+
+	/// <summary>
+	/// Button to register should be shown
+	/// </summary>
+	[Parameter]
+	public bool ShowRegister { get; set; } = false;
+
+	/// <summary>
+	/// Method which will handle registration procedure
+	/// </summary>
+	[Parameter]
+	public EventCallback<string> RegisterUserForTournamentCallBack { get; set; }
+
+	/// <summary>
+	/// Button to manage tournament should be shown
+	/// </summary>
+	[Parameter]
+	public bool ShowManagerTournament { get; set; } = false;
+
+	/// <summary>
+	/// Method which should handle manage tournament request
+	/// </summary>
+	[Parameter]
+	public EventCallback<string> ManagerTournamentCallBack { get; set; }
+
+	/// <summary>
+	/// Button which will show information about the tournament should be shown
+	/// </summary>
+	[Parameter]
+	public bool ShowTournamentInformation { get; set; } = false;
+
+	/// <summary>
+	/// Method which shoul show information about the tournament
+	/// </summary>
+	[Parameter]
+	public EventCallback<string> TournamentInformationCallBack { get; set; }
+
+	/// <summary>
+	/// Maximum lenght of the description of the tournament, otherwise it will be shortened to not overflow the card
+	/// </summary>
+	[Parameter]
+	public int MaxTextLength { get; set; } = 30;
+
+
+	private async Task RegisterUserForTournament(MouseEventArgs e)
+	{
+		await RegisterUserForTournamentCallBack.InvokeAsync(Tournament.Id);
+	}
+
+	private async Task OnManageButtonClicked(MouseEventArgs e)
+	{
+		await ManagerTournamentCallBack.InvokeAsync(Tournament.Id);
+	}
+
+	private async Task OnTournamentInformationCallBack(MouseEventArgs e)
+	{
+		await TournamentInformationCallBack.InvokeAsync(Tournament.Id);
+	}
+
+	private async Task OnTournamentUnregister()
+	{
+		await TournamentUnRegister.InvokeAsync(Tournament.Id);
+	}
+
+}

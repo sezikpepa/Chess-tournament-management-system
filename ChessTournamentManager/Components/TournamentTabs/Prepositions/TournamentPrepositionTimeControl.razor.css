@@ -1,0 +1,8 @@
+﻿li {
+    white-space: pre-line;
+}
+
+.list-group-item {
+    display: flex;
+    align-items: center;
+}

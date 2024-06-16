@@ -1,0 +1,31 @@
+﻿
+@if (!Hide)
+{
+	<ul class="list-group list-group-horizontal">
+		<li class="list-group-item w-50">@Key</li>
+		<li class="list-group-item w-50">@Value</li>
+	</ul>
+}
+
+
+
+@code {
+
+	/// <summary>
+	/// Information name
+	/// </summary>
+	[Parameter]
+	public string Key { get; set; }
+
+	/// <summary>
+	/// Information value
+	/// </summary>
+	[Parameter]
+	public string Value { get; set; }
+
+	/// <summary>
+	/// True - this information will not be visible, False - this information will be visible
+	/// </summary>
+	[Parameter]
+	public bool Hide { get; set; } = false;
+}

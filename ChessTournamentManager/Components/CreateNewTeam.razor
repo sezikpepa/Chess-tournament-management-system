@@ -1,0 +1,81 @@
+﻿
+@* Component which handles creation of teams. *@
+
+@using ChessTournamentManager.CodeStructures
+@using ChessTournamentManager.Components.Account
+@using ChessTournamentManager.Controllers
+@using ChessTournamentManager.Data
+@using ChessTournamentManager.DataServices
+@using ChessTournamentManager.LanguageAssets.TeamManagement
+@using ChessTournamentMate.Shared
+@using ChessTournamentMate.Shared.QuickResponseMessages
+@using DatabaseCommunicator.Models
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.Extensions.Localization
+
+@inject NavigationUrls NavigationUrls
+@inject UserInformation UserInformation
+
+@inject TeamManagementController TeamManagementController
+
+@inject IStringLocalizer<TeamManagementLabels> _localizer;
+
+
+
+@if(_responseMessage is not null)
+{
+    <UIResponseMessageDisappear Message="@_responseMessage" Timeout="5000"></UIResponseMessageDisappear>
+}
+
+<EditForm Model="@Model" OnValidSubmit="@SendCreateNewTeam" FormName="CreateNewTournamentForm">
+    <DataAnnotationsValidator />
+
+    <div class="row g-3">
+        <div class="col-12">
+            <label class="form-label" for="teamNameInput">@_localizer["createNewTeamName"]</label>
+            <InputText class="form-control" @bind-Value="Model.Name" id="teamNameInput"></InputText>
+            <ValidationMessage For="@(() => Model.Name)" />
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12 col-xl-2 mt-3">
+            <Button Class="form-control" Color="ButtonColor.Success" Type="ButtonType.Submit">@_localizer["createNewTeamCreateButton"]</Button>
+        </div>
+    </div>
+
+</EditForm>
+
+
+@code {
+
+    /// <summary>
+    /// Information about new team - from form
+    /// </summary>
+    [SupplyParameterFromForm]
+    public Team Model { get; set; } = new();
+
+    private QuickResponseMessage? _responseMessage;
+
+    /// <summary>
+    /// Saves new information about team in the database
+    /// </summary>
+    /// <returns></returns>
+    public async Task SendCreateNewTeam()
+    {
+        string accountId = (await UserInformation.GetLoggedUserIdAsync())!;
+        try
+        {
+            await TeamManagementController.CreateNewTeam(accountId, Model);
+            _responseMessage = new SuccessfulMessage(_localizer["createNewTeamCreated1"] + " " + Model.Name + " " + _localizer["createNewTeamCreated2"]);
+        }
+        catch
+        {
+            _responseMessage = new UnsuccessfulMessage(_localizer["createNewTeamCreateError"]);
+        }
+
+        Model = new();
+
+        await InvokeAsync(StateHasChanged);
+    }
+}

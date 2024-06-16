@@ -1,0 +1,123 @@
+﻿
+@* Page where it is possible to register for the tournament *@
+
+@page "/registrationForTournament/{TournamentId}"
+
+@rendermode @(new InteractiveServerRenderMode(false))
+@attribute [StreamRendering]
+
+@attribute [Authorize]
+
+@inherits LoadableComponent
+
+@using ChessTournamentManager.CodeStructures
+@using ChessTournamentManager.Components.Account
+@using ChessTournamentManager.Controllers
+@using ChessTournamentManager.Data
+@using ChessTournamentManager.DataServices
+@using ChessTournamentManager.LanguageAssets.TournamentRegistration
+@using ChessTournamentMate.Shared
+@using ChessTournamentMate.Shared.AvailableValues
+@using DatabaseCommunicator.Models;
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.Extensions.Localization
+@using TournamentLibrary.Participants;
+@using TournamentLibrary.TournamentHandlers;
+
+
+@inject UserInformation UserInformation
+
+@inject TournamentController TournamentController
+@inject OwnProfileController OwnProfileController
+
+@inject IStringLocalizer<TournamentRegistrationLabels> _localizer
+
+<title>@_localizer["registrationTitle"]</title>
+
+
+
+<BasicSpinner Visible="_loading"></BasicSpinner>
+
+
+@if (!_loading)
+{
+	@if (_hasCompleteProfile)
+	{
+		@if (_tournament is not null)
+		{
+			<div class="mt-3">
+				@if (_tournament.IsTeam == false)
+				{
+					<RegisterSinglePlayerForTournament TournamentId="@TournamentId"></RegisterSinglePlayerForTournament>
+				}
+				else
+				{
+					<RegisterTeamForTournament TournamentId="@TournamentId"></RegisterTeamForTournament>
+				}
+			</div>
+		}
+	}
+	else
+	{
+		<div class="mt-3">
+			<InfoAboutNotCompletedProfile Message="@_localizer["registrationNotCompletedProfile"]"></InfoAboutNotCompletedProfile>
+		</div>
+	}
+}
+
+
+
+@code{
+
+	/// <summary>
+	/// Id of the tournment for which the registration process will take action
+	/// </summary>
+	[Parameter]
+	public string TournamentId { get; set; }
+
+	/// <summary>
+	/// Information about the tournament
+	/// </summary>
+	private Tournament? _tournament;
+
+	/// <summary>
+	/// Logged user filled own profile
+	/// </summary>
+	private bool _hasCompleteProfile = false;
+
+	protected override async Task OnInitializedAsync()
+	{
+		_loading = true;
+		DateTime executionStart = DateTime.Now;
+		await InvokeAsync(StateHasChanged);
+
+		await GetTournamentInformation();
+		await SetIsProfileFilled();
+
+		await WaitMinimumTime(executionStart, 300);
+
+		_loading = false;
+		await InvokeAsync(StateHasChanged);
+
+	}
+
+	/// <summary>
+	/// Retreives information about the tournament from database
+	/// </summary>
+	/// <returns></returns>
+	public async Task GetTournamentInformation()
+	{
+		_tournament = await TournamentController.GetTournamentInformation(TournamentId);
+	}
+
+	/// <summary>
+	/// Retreives information if the user filled own profile
+	/// </summary>
+	/// <returns></returns>
+	private async Task SetIsProfileFilled()
+	{
+		string accountId = (await UserInformation.GetLoggedUserIdAsync())!;
+
+		_hasCompleteProfile = await OwnProfileController.AccountHasFilledProfile(accountId);
+	}
+}

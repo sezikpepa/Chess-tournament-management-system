@@ -1,0 +1,45 @@
+﻿
+@* Draws a line in the UI connecting two points *@
+
+<svg>
+    <line x1="@xStart" y1="@yStart" x2="@xEnd" y2="@yEnd" style="stroke: @Color; stroke-width: @LineWidth" />
+</svg>
+
+@code {
+
+    /// <summary>
+    /// X coordinate of point1
+    /// </summary>
+    [Parameter]
+    public int xStart { get; set; }
+
+    /// <summary>
+    /// X coordinate of point2
+    /// </summary>
+    [Parameter]
+    public int xEnd { get; set; }
+
+    /// <summary>
+    /// Y coordinate of point1
+    /// </summary>
+    [Parameter]
+    public int yStart { get; set; }
+
+    /// <summary>
+    /// Y coordinate of point2
+    /// </summary>
+    [Parameter]
+    public int yEnd { get; set; }
+
+    /// <summary>
+    /// Color of the line, represented as CSS colors.
+    /// </summary>
+    [Parameter]
+    public string Color { get; set; } = "black";
+
+    /// <summary>
+    /// Stoke width of the line
+    /// </summary>
+    [Parameter]
+    public int LineWidth { get; set; } = 1;
+}

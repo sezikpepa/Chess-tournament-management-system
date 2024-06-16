@@ -1,0 +1,195 @@
+﻿@* 
+Shows draw of players in the tournament *@
+
+@using ChessTournamentManager.CodeStructures
+@using ChessTournamentManager.Controllers
+@using ChessTournamentManager.DataServices
+@using ChessTournamentManager.LanguageAssets.TournamentManagementLabels
+@using ChessTournamentMate.Shared;
+@using ChessTournamentMate.Shared.QuickResponseMessages
+@using DatabaseCommunicator.Models
+@using Microsoft.Extensions.Localization
+@using Newtonsoft.Json;
+@using TournamentLibrary
+@using TournamentLibrary.Participants;
+@using TournamentLibrary.TournamentParts;
+
+@rendermode @(new InteractiveServerRenderMode(false))
+
+
+@attribute [StreamRendering]
+
+@inject NavigationManager Navigation
+
+@inject RoundDrawGenerator RoundDrawGenerator
+@inject RoundDrawController RoundDrawController
+
+@inject IStringLocalizer<TournamentManagementLabels> _localizer
+
+@if (_messageForUser is not null && !_showSpinner)
+{
+    <UIResponseRender Message="@_messageForUser"></UIResponseRender>
+
+    if (!DisableEditing)
+    {
+        <Button Color="ButtonColor.Success" @onclick="GenerateRoundDraw">@_localizer["singlePlayerDrawGenerateRoundButton"]</Button>
+    }
+}
+
+<Spinner Visible="_showSpinner" />
+
+@if(_roundDraw is not null)
+{
+    <PlayerMatchesDrawView ResultChanged="@DisableNextRound" MatchCanEndWithDraw="@MatchCanEndWithDraw" SaveMatchResultsCallBack="@SaveMatchResults" RoundPairs="@_roundDraw.GetRoundPairs()" PlayersWithPoints="@playerWithPoints"></PlayerMatchesDrawView>
+}
+
+
+
+
+@code {
+
+    /// <summary>
+    /// Id of the tournament
+    /// </summary>
+    [Parameter]
+    public string TournamentId { get; set; }
+
+    /// <summary>
+    /// Number of round from the start of the tournament
+    /// </summary>
+    [Parameter]
+    public int RoundNumber { get; set; }
+
+    /// <summary>
+    /// How many round will in total in the tournament
+    /// </summary>
+    [Parameter]
+    public int? HowManyRounds { get; set; }
+
+    /// <summary>
+    /// Draw is a valid result in the match
+    /// </summary>
+    [CascadingParameter(Name = "IsDrawPossible")]
+    public bool MatchCanEndWithDraw { get; set; } = true;
+
+    /// <summary>
+    /// User cannot change values in the round draw
+    /// </summary>
+    [CascadingParameter(Name = "DisableEditing")]
+    public bool DisableEditing { get; set; } = false;
+
+    /// <summary>
+    /// Method which should update Next round button
+    /// </summary>
+    [Parameter]
+    public EventCallback<bool> UpdateNextRoundButtonVisibility { get; set; }
+
+    private int previousRoundNumber { get; set; } = -1;
+
+    private RoundDraw<Player>? _roundDraw { get; set; }
+
+    private List<ParticipantWithPoints<Player>> playerWithPoints = new();
+
+    private bool _showSpinner = false;
+
+    private QuickResponseMessage? _messageForUser { get; set; }
+
+    private int _roundDrawForRound { get; set; } = -1;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _messageForUser = null;
+        if (_roundDrawForRound != RoundNumber || _roundDraw is null)
+        {
+            _roundDraw = null;
+            await GetRoundDraw();
+        }
+
+        if(previousRoundNumber != RoundNumber)
+        {
+            previousRoundNumber = RoundNumber;
+            await UpdateNextRoundVisibility();
+        }
+    }
+
+    /// <summary>
+    /// Retreives matches for the selected round from the database
+    /// </summary>
+    /// <returns></returns>
+    public async Task GetRoundDraw()
+    {
+        _roundDrawForRound = RoundNumber;
+        _showSpinner = true;
+        await InvokeAsync(StateHasChanged);
+
+        var result = await RoundDrawController.GetRoundDrawSingle(TournamentId, RoundNumber);
+
+        if(result is null)
+        {
+            await Task.Delay(400);
+            _messageForUser = new NotExistsInDatabase(_localizer["singlePlayerDrawNotGeneratedInfo"]);
+            _roundDraw = null;
+            playerWithPoints = [];
+            _showSpinner = false;
+
+            return;
+        }
+
+        _roundDraw = result;
+        playerWithPoints = await RoundDrawController.GetPlayersWithPoints(TournamentId, RoundNumber);
+        await Task.Delay(400);
+        _roundDraw?.SortMatches(playerWithPoints);
+
+        _showSpinner = false;
+    }
+
+    /// <summary>
+    /// Saves the selected results of matches in the database
+    /// </summary>
+    /// <param name="changedMatchResults">Matches were results were changed</param>
+    /// <returns></returns>
+    public async Task SaveMatchResults(List<RoundPair<Player>> changedMatchResults)
+    {
+        await RoundDrawController.SendMatchResults(TournamentId, RoundNumber, changedMatchResults);
+
+        await UpdateNextRoundVisibility();
+    }
+
+    /// <summary>
+    /// Next round button should not be enabled - results are not saved
+    /// </summary>
+    /// <returns></returns>
+    private async Task DisableNextRound()
+    {
+        await UpdateNextRoundButtonVisibility.InvokeAsync(false);
+    }
+
+    /// <summary>
+    /// Decides of the button which creates new round should be enabled
+    /// </summary>
+    /// <returns></returns>
+    private async Task UpdateNextRoundVisibility()
+    {
+        bool areSet = false;
+        if(_roundDraw?.GetRoundPairs().Count > 0)
+        {
+            areSet = await RoundDrawController.DoAllMatchesHaveResult(TournamentId, RoundNumber);
+        }
+
+        await UpdateNextRoundButtonVisibility.InvokeAsync(areSet);
+    }
+
+    /// <summary>
+    /// If the round is not generated, this function performs the generation process
+    /// </summary>
+    /// <param name="e"></param>
+    /// <returns></returns>
+    private async Task GenerateRoundDraw(MouseEventArgs e)
+    {
+        _showSpinner = true;
+        await InvokeAsync(StateHasChanged);
+        _messageForUser = null;
+        await RoundDrawGenerator.GenerateRoundDrawSingleAsync(TournamentId, RoundNumber);
+        await GetRoundDraw();
+    }
+}

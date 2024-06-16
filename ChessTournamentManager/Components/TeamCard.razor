@@ -1,0 +1,33 @@
+﻿@* 
+Shows team with its players in the UI *@
+
+@using DatabaseCommunicator.Models
+
+<div class="showClickable">
+    <Card>
+        <CardBody>
+            <CardTitle>@Team.Team.Name</CardTitle>
+            @GetTextForPlayers()
+        </CardBody>
+    </Card>
+</div>
+
+
+@code{
+
+    /// <summary>
+    /// Information about team
+    /// </summary>
+    [Parameter]
+    public TeamWithPlayers Team { get; set; } = new();
+
+    /// <summary>
+    /// In the UI ti distinguish between teams, first few players is shown, this method returns surnames of first few players
+    /// </summary>
+    /// <returns></returns>
+    private string GetTextForPlayers()
+    {
+        return Team.GetFirstNumberOfPlayersAsString(4);
+    }
+
+}

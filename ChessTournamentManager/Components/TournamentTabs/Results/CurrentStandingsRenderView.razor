@@ -1,0 +1,82 @@
+﻿
+
+@* Shows results of the tournament. *@
+
+@typeparam TParticipant where TParticipant : IParticipant
+
+
+@using ChessTournamentManager.LanguageAssets.TournamentManagementLabels
+@using ChessTournamentMate.Shared
+@using DatabaseCommunicator.Models
+@using Microsoft.Extensions.Localization
+@using TournamentLibrary
+@using TournamentLibrary.Participants
+
+@inject IStringLocalizer<TournamentManagementLabels> _localizer
+
+
+<div class="table-responsive">
+    <table class="table table-striped currentStandingsTable">
+        <thead>
+            <tr>
+                <th class="col-1">@_localizer["resultsCurrentStandingsPlace"]</th>
+                <th class="col-6">@_localizer["resultsCurrentStandingsName"]</th>
+                <th class="col-1">@_localizer["resultsCurrentStandingsScore"]</th>
+                @foreach (string element in AuxiliaryPoints)
+                {
+                    <th class="col-1">@_localizer[element]</th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @{
+                decimal lastScore = -1;
+                int positionWithLastScore = -1;
+                for (int i = 0; i < PlayersWithPoints.Count; i++)
+                {
+                    <tr>
+                        @if (PlayersWithPoints[i].Score == lastScore && AuxiliaryPoints.Count == 0)
+                        {
+                            <th class="col-1">@(positionWithLastScore).</th>
+                        }
+                        else
+                        {
+                            <th class="col-1">@(i + 1).</th>
+                            int j = i;
+                            positionWithLastScore = j + 1;
+                            lastScore = PlayersWithPoints[i].Score;
+                        }
+                        
+                        <th class="col-6">@PlayersWithPoints[i].Participant.DisplayName</th>
+                        <th class="col-1">@PlayersWithPoints[i].Score.ToString("0.######")</th>
+                        @foreach (string auxiliaryName in AuxiliaryPoints)
+                        {
+                            <th class="col-1">
+                                @(new ReflectionCustomMethods().GetPropertyValue<decimal>(PlayersWithPoints[i], auxiliaryName).ToString("0.######"))
+                            </th>
+                        }
+                    </tr>
+                }
+            }
+            
+
+        </tbody>
+    </table>
+</div>
+
+
+@code {
+
+    /// <summary>
+    /// Results of the tournament
+    /// </summary>
+    [Parameter]
+    public List<ParticipantWithPoints<TParticipant>> PlayersWithPoints { get; set; } = [];
+
+    /// <summary>
+    /// Auxiliary points will be used if the standings cannot be determined via basic points. They are ordered by their priority.
+    /// </summary>
+    [Parameter]
+    public List<string> AuxiliaryPoints { get; set; } = new();
+
+}

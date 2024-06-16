@@ -1,0 +1,121 @@
+﻿@* 
+Provides form where it is possible to fillout player information and register it to the tournament *@
+
+@using ChessTournamentManager.CodeStructures
+@using ChessTournamentManager.Controllers
+@using ChessTournamentManager.Data
+@using ChessTournamentManager.DataServices
+@using ChessTournamentManager.LanguageAssets.TournamentRegistration
+@using ChessTournamentMate.Shared
+@using ChessTournamentMate.Shared.QuickResponseMessages
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.SignalR.Client
+@using Microsoft.Extensions.Localization
+
+@inject UserInformation UserInformation
+
+@inject NavigationUrls NavigationUrls
+
+@inject TournamentRegistrationController TournamentRegistrationController
+
+@inject IStringLocalizer<TournamentRegistrationLabels> _localizer
+
+<Button Color="ButtonColor.Success" @onclick="() => NavigationUrls.ToTournamentsPage()">@_localizer["backToTournamentsPage"]</Button>
+
+@if (!_loading)
+{
+	@if (_message is null)
+	{
+		<div class="mt-3">
+			<UIResponseRender Message="_registrationPossibleMessage"></UIResponseRender>
+		</div>
+	}
+
+	@if (_registrationPossibleMessage?.MessageType != QuickResponseMessageTypes.Error)
+	{
+		@if (_message is null)
+		{
+			<h3>@_localizer["singleRegisterAccountInfo"]</h3>
+
+			<div class="mt-4">
+				<Button Color="ButtonColor.Success" @onclick="SendRegistration">@_localizer["singleRegisterButton"]</Button>
+			</div>
+		}
+	}
+
+	<div class="mt-3">
+		<UIResponseRender Message="_message"></UIResponseRender>
+	</div>
+}
+
+
+@code {
+
+	/// <summary>
+	/// Id of the tournament
+	/// </summary>
+	[Parameter]
+	public string TournamentId { get; set; }
+
+	/// <summary>
+	/// Message in the UI
+	/// </summary>
+	private QuickResponseMessage? _message;
+
+	/// <summary>
+	/// Message in the UI if the logged user can register to the tournament
+	/// </summary>
+	private QuickResponseMessage? _registrationPossibleMessage;
+
+	/// <summary>
+	/// Page was not loaded yet
+	/// </summary>
+	private bool _loading = true;
+
+	protected override async Task OnInitializedAsync()
+	{
+		_loading = true;
+		_registrationPossibleMessage = await GetCanRegister();
+		_loading = false;
+	}
+
+	/// <summary>
+	/// Returns information if the logged user satisfy criteria to register to the tournament
+	/// </summary>
+	/// <returns></returns>
+	private async Task<QuickResponseMessage> GetCanRegister()
+	{
+		string accountId = (await UserInformation.GetLoggedUserIdAsync())!;
+		return await TournamentRegistrationController.CanRegisterAccountToTournament(TournamentId, accountId);
+	}
+
+	/// <summary>
+	/// Register logged user to the tournament
+	/// </summary>
+	/// <param name="e">null</param>
+	/// <returns></returns>
+	private async Task SendRegistration(MouseEventArgs e)
+	{
+		string accountId = (await UserInformation.GetLoggedUserIdAsync())!;
+		var canRegister = await GetCanRegister();
+		if(canRegister.MessageType != QuickResponseMessageTypes.Success)
+		{
+			_registrationPossibleMessage = canRegister;
+			await InvokeAsync(StateHasChanged);
+			return;
+		}
+		try
+		{
+			await TournamentRegistrationController.RegisterPlayerForTournament(TournamentId, accountId);
+		}
+		catch
+		{
+			_message = new UnsuccessfulMessage(_localizer["singleRegisterError"]);
+			await InvokeAsync(StateHasChanged);
+			return;
+		}
+
+		_message = new SuccessfulMessage(_localizer["singleRegisterSuccess"]);
+		await InvokeAsync(StateHasChanged);
+	}
+}

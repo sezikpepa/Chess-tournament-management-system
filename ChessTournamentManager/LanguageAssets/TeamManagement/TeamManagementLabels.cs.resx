@@ -1,0 +1,222 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="canModifyTeam" xml:space="preserve">
+    <value>Tým je možné upravovat</value>
+  </data>
+  <data name="cannotModifyRegisteredToTournament" xml:space="preserve">
+    <value>Není možné upravovat tento tým, protože je již přihlášen to turnaje</value>
+  </data>
+  <data name="createNewTeamCreateButton" xml:space="preserve">
+    <value>Vytvořit nový tým</value>
+  </data>
+  <data name="createNewTeamCreated1" xml:space="preserve">
+    <value>Tým</value>
+  </data>
+  <data name="createNewTeamCreated2" xml:space="preserve">
+    <value>byl vytvořen</value>
+  </data>
+  <data name="createNewTeamCreateError" xml:space="preserve">
+    <value>Nebylo možné vytvořit tým, zkuste to prosím později</value>
+  </data>
+  <data name="createNewTeamName" xml:space="preserve">
+    <value>Jméno týmu:</value>
+  </data>
+  <data name="createNewTeamNotFilledProfile" xml:space="preserve">
+    <value>Tým je možné vytvořit až po vyplnění profilu. Následující tlačítko vás přesměruje na stránku, kde je možné vyplnit nutné informace</value>
+  </data>
+  <data name="createNewTeamTitle" xml:space="preserve">
+    <value>Vytvořit nový tým</value>
+  </data>
+  <data name="createNewTeamToManagementButton" xml:space="preserve">
+    <value>Zpět na stránku se spravovanými týmy</value>
+  </data>
+  <data name="createNewTeamToolTip" xml:space="preserve">
+    <value>Vyplněním jména týmu a kliknutím na tlačítko Vytvořit nový tým dojde k vytvoření nového týmu. Tento tým lze dále upravovat ze stránky se všemi spravovanými týmy</value>
+  </data>
+  <data name="playersManagementAddToTeamButton" xml:space="preserve">
+    <value>Přidat do týmu</value>
+  </data>
+  <data name="playersManagementCannotLoadPlayers" xml:space="preserve">
+    <value>Nebylo možné získat tým a jeho hráče z databáze, zkuste to prosím později</value>
+  </data>
+  <data name="playersManagementSave" xml:space="preserve">
+    <value>Uložit hráče týmu</value>
+  </data>
+  <data name="playersManagementSaveError" xml:space="preserve">
+    <value>Nebylo možné uložit hráče v týmu, zkuste to prosím později</value>
+  </data>
+  <data name="playersManagementSaveSuccess" xml:space="preserve">
+    <value>Hráči týmu byli uloženi</value>
+  </data>
+  <data name="playersManagementUnable" xml:space="preserve">
+    <value>Není možné upravovat hráče týmu, který je zaregistrován v turnaji</value>
+  </data>
+  <data name="teamManagementDeleteDialogDescription" xml:space="preserve">
+    <value>Jste si jistí smazáním týmu? Tato akce již nelze vrátit</value>
+  </data>
+  <data name="teamManagementDeleteDialogHeader" xml:space="preserve">
+    <value>Smazání týmu - potvrzení</value>
+  </data>
+  <data name="teamManagementDeleteNo" xml:space="preserve">
+    <value>Ne</value>
+  </data>
+  <data name="teamManagementDeleteTeam" xml:space="preserve">
+    <value>Smazat tým</value>
+  </data>
+  <data name="teamManagementDeleteYes" xml:space="preserve">
+    <value>Ano</value>
+  </data>
+  <data name="teamManagementNotManager" xml:space="preserve">
+    <value>Nemůžete editovat tento tým, jelikož nejste jeho správce</value>
+  </data>
+  <data name="teamManagementTabPlayers" xml:space="preserve">
+    <value>Hráči</value>
+  </data>
+  <data name="teamManagementTabTournaments" xml:space="preserve">
+    <value>Turnaje</value>
+  </data>
+  <data name="teamManagementTitle" xml:space="preserve">
+    <value>Správa týmu</value>
+  </data>
+  <data name="teamManagementToManagedTeams" xml:space="preserve">
+    <value>Zpět na stránku se spravovanými týmy</value>
+  </data>
+  <data name="teamManagementToolTip" xml:space="preserve">
+    <value>Zde je stránka, kde lze spravovat vybraný tým. Můžete upravovat hráče týmu kliknutím na tlaíčtko Přidat do týmu a nebo tým odhlásit z turnaje</value>
+  </data>
+  <data name="teamsManagementCannotLoadTeams" xml:space="preserve">
+    <value>Nebylo možné načíst spravované týmy, zkuste to prosím později</value>
+  </data>
+  <data name="teamsManagementTitle" xml:space="preserve">
+    <value>Správa týmů</value>
+  </data>
+  <data name="teamsManagementToolTip" xml:space="preserve">
+    <value>Zde jsou týmu, které spravujete. Po kliknutí na tým dojde k přesměrování na stránku, kde je možné tento tým upravit. Po kliknutí na tlačítko se symbolem Plus dojde k přesměrování na stránku, kde je možné vytvořit nový tým.</value>
+  </data>
+  <data name="teamTournamentsCurrent" xml:space="preserve">
+    <value>Současné a nadcházející turnaje</value>
+  </data>
+  <data name="teamTournamentsManagementNoTournaments" xml:space="preserve">
+    <value>Nebyly nalezeny žádné turnaje</value>
+  </data>
+  <data name="teamTournamentsPast" xml:space="preserve">
+    <value>Proběhlé turnaje</value>
+  </data>
+</root>

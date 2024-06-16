@@ -1,0 +1,93 @@
+﻿
+@* Serves as a menu for different settings in the tournament. Shows specific settings based on user selection. *@
+
+@using ChessTournamentManager.LanguageAssets.TournamentManagementLabels
+@using ChessTournamentMate.Shared.AvailableValues
+@using Microsoft.Extensions.Localization
+
+@inject IStringLocalizer<TournamentManagementLabels> _localizer
+
+<div class="mt-4">
+    <Tabs NavStyle="NavStyle.VerticalPills">
+        <Tab Title="@_localizer["settingsTabTimeControl"]" IsActive="true">
+            <Content>
+                <div class="ms-5">
+                    <TournamentTimeControlSettingsForm TournamentId="@TournamentId"></TournamentTimeControlSettingsForm>
+                </div>
+            </Content>
+        </Tab>
+        @if (IsTeamTournament)
+        {
+            <Tab Title="@_localizer["settingsTabTeamSettings"]">
+                <Content>
+                    <div class="ms-5">
+                        <TeamDrawSettingsForm TournamentId="@TournamentId"></TeamDrawSettingsForm>
+                    </div>
+                </Content>
+            </Tab>
+        }
+        <Tab Title="@_localizer["settingsTabRegistration"]">
+            <Content>
+                <div class="ms-5">
+                    <RegistrationSettingsRender TournamentId="@TournamentId"></RegistrationSettingsRender>
+                </div>
+            </Content>
+        </Tab>
+        <Tab Title="@_localizer["settingsTabTournamentMainPicture"]">
+            <Content>
+                <div class="ms-5">
+                    <UploadProfilePictureForm ForElement="@TournamentId"></UploadProfilePictureForm>
+                </div>
+            </Content>
+        </Tab>
+        <Tab Disabled="TournamentType == TournamentTypes.Playoff" Title="@_localizer["settingsTabResults"]">
+            <Content>
+                <div class="ms-5">
+                    <ResultsSettingsForm TournamentId="@TournamentId"></ResultsSettingsForm>
+                </div>
+            </Content>
+        </Tab>
+        @if (TournamentType == TournamentTypes.Swiss)
+        {
+            <Tab Title="@_localizer["settingsTabSwissSettings"]">
+                <Content>
+                    <div class="ms-5">
+                        <SwissTournamentSettingsForm TournamentId="@TournamentId"></SwissTournamentSettingsForm>
+                    </div>
+                </Content>
+            </Tab>
+        }
+        <Tab Title="@_localizer["settingsTabLocation"]">
+            <Content>
+                <div class="ms-5">
+                    <TournamentAddressForm TournamentId="@TournamentId"></TournamentAddressForm>
+                </div>
+            </Content>
+        </Tab>
+    </Tabs>
+
+</div>
+
+
+
+@code {
+
+    /// <summary>
+    /// Id of the tournament
+    /// </summary>
+    [Parameter]
+    public string TournamentId { get; set; }
+
+    /// <summary>
+    /// True - tournament is for teams, False - tournament is for single players
+    /// </summary>
+    [Parameter]
+    public bool IsTeamTournament { get; set; }
+
+    /// <summary>
+    /// Which pairing procedure is used during round pairing
+    /// </summary>
+    [Parameter]
+    public TournamentTypes? TournamentType { get; set; }
+
+}

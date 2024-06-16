@@ -1,0 +1,105 @@
+﻿
+@* Handles settings specific for team tournaments. *@
+
+@using ChessTournamentManager.Controllers
+@using ChessTournamentManager.DataServices
+@using ChessTournamentManager.LanguageAssets.TournamentManagementLabels
+@using ChessTournamentMate.Shared
+@using DatabaseCommunicator.Models
+@using Microsoft.Extensions.Localization
+
+@inject TournamentSettingsController TournamentSettingsController
+@inject TournamentController TournamentController
+@inject IStringLocalizer<TournamentManagementLabels> _localizer
+
+@if (_loaded)
+{
+    <EditForm Model="@Model" OnValidSubmit="Submit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <UIResponseRender Message="_cannotEditMessage"></UIResponseRender>
+
+        <div class="row">
+            <div class="col-3">
+                <label class="form-label" for="selectTournamentSeriesCombobox">@_localizer["settingsTabTeamSettingsTeamSize"]</label>
+                <NumberInput Disabled="!_canEdit" class="form-control" @bind-Value="Model.TeamSizeForRound"></NumberInput>
+            </div>
+        </div>
+
+
+        <div class="row mt-3">
+            <div class="col-2">
+                <Button Disabled="!_canEdit" Color="ButtonColor.Success" Type="ButtonType.Submit">@_localizer["settingsTabTeamSettingsSaveButton"]</Button>
+                </div>
+            </div>
+
+        </EditForm>
+}
+
+
+
+@code {
+
+    /// <summary>
+    /// Information from form
+    /// </summary>
+    [SupplyParameterFromForm]
+    public TeamDrawSettings Model { get; set; } = new();
+
+    /// <summary>
+    /// Id of the tournament
+    /// </summary>
+    [Parameter]
+    public string TournamentId { get; set; }
+
+    private QuickResponseMessage? _cannotEditMessage;
+
+    /// <summary>
+    /// It is possible to change values in form
+    /// </summary>
+    private bool _canEdit = false;
+
+    private bool _loaded = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _canEdit = (await TournamentController.GetNumberOfRegisteredTeamsWithPlayers(TournamentId)) == 0;
+        if(_canEdit == false)
+        {
+            _cannotEditMessage = new UnsuccessfulMessage(_localizer["settingsTabTeamSettingsCannotEdit"]);
+        }
+        else
+        {
+            _cannotEditMessage = null;
+        }
+        Model = await TournamentSettingsController.GetTournamentTeamDrawSettingsAsync(TournamentId);
+        _loaded = true;
+    }
+
+    /// <summary>
+    /// Saves information in the database
+    /// </summary>
+    /// <returns></returns>
+    public async Task Submit()
+    {
+        _canEdit = (await TournamentController.GetNumberOfRegisteredTeamsWithPlayers(TournamentId)) == 0;
+        if(_canEdit == false)
+        {
+            _cannotEditMessage = new UnsuccessfulMessage(_localizer["settingsTabTeamSettingsCannotEdit"]);
+            await InvokeAsync(StateHasChanged);
+            return;
+        }
+        await TournamentSettingsController.SaveTeamDrawSettingsAsync(TournamentId, Model);
+    }
+
+    /// <summary>
+    /// Receives current settings from database
+    /// </summary>
+    /// <param name="settings"></param>
+    public void ReceiveTournamentTeamDrawSettings(TeamDrawSettings settings)
+    {
+        Model = settings;
+        InvokeAsync(StateHasChanged);
+    }
+}

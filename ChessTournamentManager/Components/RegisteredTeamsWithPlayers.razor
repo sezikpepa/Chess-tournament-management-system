@@ -1,0 +1,193 @@
+﻿
+@* Shows registered teams in the tournament with their players *@
+
+@using ChessTournamentManager.CodeStructures
+@using ChessTournamentManager.Controllers
+@using ChessTournamentManager.DataServices
+@using ChessTournamentManager.LanguageAssets.TournamentManagementLabels
+@using ChessTournamentMate.Shared
+@using DatabaseCommunicator.Models
+@using Microsoft.Extensions.Localization
+
+
+@inject TournamentController TournamentController
+@inject TournamentManagingController TournamentManagingController
+@inject NavigationUrls NavigationUrls
+
+
+@inject IStringLocalizer<TournamentManagementLabels> _localizer
+
+@if (_loaded)
+{
+	<div class="mt-3">
+		<UIResponseRender Message="_message"></UIResponseRender>
+	</div>
+
+	<div class="mt-3">
+		<UIResponseMessageDisappear Message="_teamDeletedMessage"></UIResponseMessageDisappear>
+	</div>
+
+	<div class="mt-3">
+		@if (RegisteredTeams is not null)
+		{
+			@foreach (var element in RegisteredTeams)
+			{
+				<TeamWithPlayersCollapse PlayerSelectedForPerformance="ShowPlayerPerformance" TeamDeleteDisabled="@(_tournament?.HasStarted ?? false)" TeamSelectedForDelete="@TeamSelectedForDelete" PlayerSelectedForInfoCallBack="@ShowPlayerInfo" TeamWithPlayers="element"></TeamWithPlayersCollapse>
+			}
+		}
+	</div>
+
+	<div class="mt-3">
+		<SaveCancelButtons Visible="_teamsSelectedForDelete.Any()" OnSaveChanges="SaveChanges" OnCancelChanges="CancelChanges"></SaveCancelButtons>
+	</div>
+}
+
+
+
+@code {
+
+	/// <summary>
+	/// Id of the tournament
+	/// </summary>
+	[Parameter]
+	public string TournamentId { get; set; }
+
+	/// <summary>
+	/// Information about tournament
+	/// </summary>
+	[Parameter]
+	public Tournament? _tournament { get; set; }
+
+	/// <summary>
+	/// Teams registered in the tournament
+	/// </summary>
+	public List<TeamWithPlayers>? RegisteredTeams { get; set; }
+
+	/// <summary>
+	/// Message in the UI
+	/// </summary>
+	private QuickResponseMessage? _message;
+
+	/// <summary>
+	/// Message in the UI, that teams were deleted from the tournament
+	/// </summary>
+	private QuickResponseMessage? _teamDeletedMessage;
+
+	/// <summary>
+	/// Teams which should be deleted from the tournment
+	/// </summary>
+	private List<string> _teamsSelectedForDelete = [];
+
+	/// <summary>
+	/// Page was loaded
+	/// </summary>
+	private bool _loaded = false;
+
+	/// <summary>
+	/// Shows page where will be shown matches of the player with results
+	/// </summary>
+	/// <param name="id">Id of the player for which the page should be shown</param>
+	private void ShowPlayerPerformance(string id)
+	{
+		NavigationUrls.ToPlayerTournamentPerformance(TournamentId, id);
+	}
+
+	protected override async Task OnInitializedAsync()
+	{
+		await ReloadData();
+	}
+
+	/// <summary>
+	/// Refresh all loaded data, retreives the information
+	/// </summary>
+	/// <returns></returns>
+	public async Task ReloadData()
+	{
+		_loaded = false;
+		_teamsSelectedForDelete = [];
+		_teamDeletedMessage = null;
+		await GetRegisteredTeamsWithPlayers();
+		await GetTournamentInformation();
+		_loaded = true;
+		await InvokeAsync(StateHasChanged);
+	}
+
+	/// <summary>
+	/// Retreives information about the tournament
+	/// </summary>
+	/// <returns></returns>
+	private async Task GetTournamentInformation()
+	{
+		_tournament = await TournamentController.GetTournamentInformation(TournamentId);
+	}
+
+	/// <summary>
+	/// Saves the information which teams were deleted from the tournament in the database
+	/// </summary>
+	/// <returns></returns>
+	private async Task SaveChanges()
+	{
+		await TournamentManagingController.DeleteTeamFromTournament(TournamentId, _teamsSelectedForDelete);
+		_teamDeletedMessage = new SuccessfulMessage(_localizer["registeredTeamsDeleteConfirmation"]);
+		_teamsSelectedForDelete = [];
+	}
+
+	/// <summary>
+	/// If the user changes his/her mind, unsaved changed can be reversed
+	/// </summary>
+	/// <returns></returns>
+	private async Task CancelChanges()
+	{
+		_teamsSelectedForDelete = [];
+		await GetRegisteredTeamsWithPlayers();
+		await InvokeAsync(StateHasChanged);
+	}
+
+	/// <summary>
+	/// Retreives all teams with their players which are registered in the tournament
+	/// </summary>
+	/// <returns></returns>
+	public async Task GetRegisteredTeamsWithPlayers()
+	{
+		try
+		{
+			RegisteredTeams = (await TournamentController.GetRegisteredTeamsWithPlayers(TournamentId)).ToList();
+		}
+		catch
+		{
+			_message = new UnsuccessfulMessage(_localizer["registeredTeamsDatabaseError"]);
+			await InvokeAsync(StateHasChanged);
+			return;
+		}
+
+		if(RegisteredTeams.Count() == 0)
+		{
+			_message = new NotExistsInDatabase(_localizer["registeredTeamsNoRegisteredTeams"]);
+		}
+		else
+		{
+			_message = null;
+		}		
+	}
+
+	/// <summary>
+	/// Shows player profile
+	/// </summary>
+	/// <param name="id">Id of the player</param>
+	public void ShowPlayerInfo(string id)
+	{
+		NavigationUrls.ToPlayerProfile(id);
+	}
+
+	/// <summary>
+	/// Deletes team from the registered teams in the tournament - not yet saved
+	/// </summary>
+	/// <param name="teamId"></param>
+	/// <returns></returns>
+	public async Task TeamSelectedForDelete(string teamId)
+	{
+		RegisteredTeams?.RemoveAll(x => x.Team.Id == teamId);
+		_teamsSelectedForDelete.Add(teamId);
+		await InvokeAsync(StateHasChanged);
+	}
+}

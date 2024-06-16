@@ -1,0 +1,94 @@
+﻿
+@* Shows table representation of results. *@
+
+@using DatabaseCommunicator.Models
+@using TournamentLibrary.Participants
+@using TournamentLibrary.TournamentParts
+
+
+@typeparam TParticipant where TParticipant : class, IParticipant
+
+<div class="table-responsive">
+	<table class="table">
+		<thead>
+			<tr>
+				<th style="width: 50px;"></th>
+				<th></th>
+				@for (int j = 0; j < Participants.Count; j++)
+				{
+					<th style="width: 50px;">@(j + 1)</th>
+				}
+			</tr>
+		</thead>
+		<tbody>
+			@for (int j = 0; j < Participants.Count; j++)
+			{
+				<tr>
+					<th style="width: 50px;">@(j + 1)</th>
+					<th>@Participants[j].DisplayName</th>
+					@for (int i = 0; i < Participants.Count; i++)
+					{
+						if (_participantsWithPoints?.Count() > 0)
+						{
+							if (i == j)
+							{
+								<th style="width: 50px;">X</th>
+							}
+							else if (_participantsWithPoints[Participants[j].Id].TryGetValue(Participants[i].Id, out decimal value))
+							{
+								<th style="width: 50px;">@(value.ToString("0.##"))</th>
+							}
+							else
+							{
+								<th style="width: 50px;"></th>
+							}
+						}
+					}
+				</tr>
+			}
+		</tbody>
+	</table>
+</div>
+
+
+@code {
+
+	/// <summary>
+	/// All players/teams which are registered to the tournament
+	/// </summary>
+	[Parameter]
+	public List<TParticipant> Participants { get; set; } = [];
+
+	/// <summary>
+	/// All matches which have been played in the tournament
+	/// </summary>
+	[Parameter]
+	public List<RoundPair<TParticipant>> PairsWithResults { get; set; } = [];
+
+	private Dictionary<string, Dictionary<string, decimal>> _participantsWithPoints { get; set; } = [];
+
+	protected override async Task OnParametersSetAsync()
+	{
+		SortMatchesForPlayer();
+		await InvokeAsync(StateHasChanged);
+	}
+
+	/// <summary>
+	/// Creates dictionary where the key is the player id and value is matches
+	/// </summary>
+	public void SortMatchesForPlayer()
+	{
+		_participantsWithPoints = [];
+
+		foreach (TParticipant participant in Participants)
+		{
+			var asWhite = PairsWithResults.Where(x => x.White.Id == participant.Id).ToDictionary(x => x.Black.Id, x => x.Result.WhitePoints);
+			var asBlack = PairsWithResults.Where(x => x.Black.Id == participant.Id).ToDictionary(x => x.White.Id, x => x.Result.BlackPoints);
+
+			var matches = asWhite.Union(asBlack).ToDictionary(x => x.Key, x => x.Value);
+
+			_participantsWithPoints.Add(participant.Id, matches);
+		}
+	}
+
+}

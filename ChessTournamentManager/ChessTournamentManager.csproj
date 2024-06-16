@@ -1,0 +1,210 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>aspnet-ChessTournamentManager-99a7e884-5a1e-4fd3-9aad-f8e84a07d7c1</UserSecretsId>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <NoWarn>1701;1702;CS8618;CS8600;CS8601;CS8602;CS8604;CS8618</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <NoWarn>1701;1702;CS8618;CS8600;CS8601;CS8602;CS8604;CS8618</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ChessTournamentManager.Client\ChessTournamentManager.Client.csproj" />
+    <ProjectReference Include="..\DatabaseCommunicator\DatabaseCommunicator.csproj" />
+    <ProjectReference Include="..\TournamentLibrary\TournamentLibrary.csproj" />
+    <PackageReference Include="Blazor.Bootstrap" Version="2.2.1" />
+    <PackageReference Include="Blazor.Flags" Version="1.0.0.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="8.0.4" />
+    <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="8.0.4" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.4" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="8.0.4" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.4" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.4">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Localization" Version="8.0.4" />
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.19.6" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Components\TournamentTabs\Results\TournamentResultsTeamRender.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="LanguageAssets\Account\AccountLabels.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>AccountLabels.resx</DependentUpon>
+    </Compile>
+    <Compile Update="LanguageAssets\CreateTournament\CreateTournamentLabels.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>CreateTournamentLabels.resx</DependentUpon>
+    </Compile>
+    <Compile Update="LanguageAssets\MainMenuLables.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>MainMenuLables.resx</DependentUpon>
+    </Compile>
+    <Compile Update="LanguageAssets\MyTournaments\MyTournamentsLabels.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>MyTournamentsLabels.resx</DependentUpon>
+    </Compile>
+    <Compile Update="LanguageAssets\PlayerService\PlayerServiceLabels.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>PlayerServiceLabels.resx</DependentUpon>
+    </Compile>
+    <Compile Update="LanguageAssets\Profiles\ProfilesLabels.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ProfilesLabels.resx</DependentUpon>
+    </Compile>
+    <Compile Update="LanguageAssets\TeamManagement\TeamManagementLabels.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>TeamManagementLabels.resx</DependentUpon>
+    </Compile>
+    <Compile Update="LanguageAssets\TournamentCard\TournamentCardLabels - Kopie.en.Designer.cs">
+      <DependentUpon>TournamentCardLabels.en.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+    </Compile>
+    <Compile Update="LanguageAssets\TournamentCard\TournamentCardLabels.en.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>TournamentCardLabels.en.resx</DependentUpon>
+    </Compile>
+    <Compile Update="LanguageAssets\TournamentForParticipants\TournamentForParticipantsLabels.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>TournamentForParticipantsLabels.resx</DependentUpon>
+    </Compile>
+    <Compile Update="LanguageAssets\TournamentManagementLabels\TournamentManagementLabels.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>TournamentManagementLabels.resx</DependentUpon>
+    </Compile>
+    <Compile Update="LanguageAssets\TournamentRegistration\TournamentRegistrationLabels.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>TournamentRegistrationLabels.resx</DependentUpon>
+    </Compile>
+    <Compile Update="LanguageAssets\Tournaments\TournamentsLabels.en.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>TournamentsLabels.en.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Update="appsettings.Development.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Update="appsettings.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="LanguageAssets\Account\AccountLabels.cs.resx">
+      <Generator></Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="LanguageAssets\Account\AccountLabels.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>AccountLabels.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Update="LanguageAssets\CreateTournament\CreateTournamentLabels.cs.resx">
+      <Generator></Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="LanguageAssets\CreateTournament\CreateTournamentLabels.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>CreateTournamentLabels.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Update="LanguageAssets\MainMenuLables.cs.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="LanguageAssets\MainMenuLables.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>MainMenuLables.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Update="LanguageAssets\MainMenuLables.cs.resx">
+      <Generator></Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="LanguageAssets\MyTournaments\MyTournamentsLabels.cs.resx">
+      <Generator></Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="LanguageAssets\MyTournaments\MyTournamentsLabels.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>MyTournamentsLabels.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Update="LanguageAssets\PlayerService\PlayerServiceLabels.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>PlayerServiceLabels.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Update="LanguageAssets\PlayerService\PlayerServiceLabels.cs.resx">
+      <Generator></Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="LanguageAssets\Profiles\ProfilesLabels.cs.resx">
+      <Generator></Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="LanguageAssets\Profiles\ProfilesLabels.resx">
+      <LastGenOutput>ProfilesLabels.Designer.cs</LastGenOutput>
+      <Generator>PublicResXFileCodeGenerator</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="LanguageAssets\TeamManagement\TeamManagementLabels.cs.resx">
+      <Generator></Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="LanguageAssets\TeamManagement\TeamManagementLabels.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>TeamManagementLabels.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Update="LanguageAssets\TournamentCard\TournamentCardLabels.cs.resx">
+      <Generator></Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="LanguageAssets\TournamentCard\TournamentCardLabels.en.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>TournamentCardLabels.en.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Update="LanguageAssets\TournamentForParticipants\TournamentForParticipantsLabels.cs.resx">
+      <Generator></Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="LanguageAssets\TournamentForParticipants\TournamentForParticipantsLabels.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>TournamentForParticipantsLabels.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Update="LanguageAssets\TournamentManagementLabels\TournamentManagementLabels.cs.resx">
+      <Generator></Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="LanguageAssets\TournamentManagementLabels\TournamentManagementLabels.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>TournamentManagementLabels.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Update="LanguageAssets\TournamentRegistration\TournamentRegistrationLabels.cs.resx">
+      <Generator></Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="LanguageAssets\TournamentRegistration\TournamentRegistrationLabels.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>TournamentRegistrationLabels.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Update="LanguageAssets\Tournaments\TournamentsLabels.cs.resx">
+      <Generator></Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="LanguageAssets\Tournaments\TournamentsLabels.en.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>TournamentsLabels.en.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+
+</Project>

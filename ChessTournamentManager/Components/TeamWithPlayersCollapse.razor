@@ -1,0 +1,101 @@
+﻿@using DatabaseCommunicator.Models
+
+
+
+<div class="showClickable row roundCornersBorder p-2 mt-1">
+    <div @onclick="TogglePlayers" class="col-10 mt-1">
+        @TeamWithPlayers?.Team.Name
+    </div>
+    <div class="col-1">
+        @if (!TeamDeleteDisabled && !DisableEditing)
+        {
+            <Button Color="ButtonColor.Danger" @onclick="() => DeleteTeamFromTournament(TeamWithPlayers?.Team.Id)">
+                <i class="bi bi-x-lg"></i>
+            </Button>
+        }
+    </div>
+    <div @onclick="TogglePlayers" class="col-1 mt-2">
+        <div class="rotateHalf">
+            <Icon Color="IconColor.Dark" Size="IconSize.x6" Name="IconName.TriangleFill"></Icon>
+        </div>
+    </div>
+</div>
+
+<div class="col-12">
+    <Collapse @ref="teamPlayers">
+            <PlayersSelectionList PlayerSelectedForPerformance="PlayerSelectedForPerformance" DeletePlayersDisabled="true" PlayerSelectedForInfo="PlayerSelectedForInfo" RegisteredParticipants="TeamWithPlayers?.Players"></PlayersSelectionList>
+    </Collapse>
+</div>
+
+
+@code {
+
+    /// <summary>
+    /// Information about team with its players
+    /// </summary>
+    [Parameter]
+    public TeamWithPlayers? TeamWithPlayers { get; set; }
+
+    /// <summary>
+    /// Method which should show information about selected player
+    /// </summary>
+    [Parameter]
+    public EventCallback<string> PlayerSelectedForInfoCallBack { get; set; }
+
+    /// <summary>
+    /// Method which should remove selected player from the team
+    /// </summary>
+    [Parameter]
+    public EventCallback<string> TeamSelectedForDelete { get; set; }
+
+    /// <summary>
+    /// Method which should show performance of the selected player
+    /// </summary>
+    [Parameter]
+    public EventCallback<string> PlayerSelectedForPerformance { get; set; }
+
+    /// <summary>
+    /// Deletion of the team is possible
+    /// </summary>
+    [Parameter]
+    public bool TeamDeleteDisabled { get; set; } = false;
+
+    /// <summary>
+    /// User cannot edit the team
+    /// </summary>
+    [CascadingParameter(Name = "DisableEditing")]
+    public bool DisableEditing { get; set; } = false;
+
+    Collapse teamPlayers = default!;
+
+    /// <summary>
+    /// Hides or shows players in the team in the UI
+    /// </summary>
+    /// <returns></returns>
+    private async Task TogglePlayers() => await teamPlayers.ToggleAsync();
+
+    /// <summary>
+    /// Shows profile of the selected player
+    /// </summary>
+    /// <param name="id">Id of the player</param>
+    /// <returns></returns>
+    public async Task PlayerSelectedForInfo(string id)
+    {
+        await PlayerSelectedForInfoCallBack.InvokeAsync(id);
+    }
+
+    /// <summary>
+    /// Deletes team from the tournament, team will not participate in the tournament
+    /// </summary>
+    /// <param name="teamId">Id of the tournament</param>
+    /// <returns></returns>
+    private async Task DeleteTeamFromTournament(string? teamId)
+    {
+        if(teamId is null)
+        {
+            return;
+        }
+
+        await TeamSelectedForDelete.InvokeAsync(teamId);
+    }
+}

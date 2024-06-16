@@ -1,0 +1,97 @@
+﻿
+@* Enables user to selected if the results should be shown normally - each row is one participant - or graphicaly (table, playoff bracket) *@
+
+@using ChessTournamentManager.CodeStructures
+@using ChessTournamentManager.Components.TournamentTabs.Results
+@using ChessTournamentManager.Controllers
+@using ChessTournamentManager.DataServices
+@using ChessTournamentManager.LanguageAssets.TournamentManagementLabels
+@using ChessTournamentMate.Shared;
+@using DatabaseCommunicator.Models
+@using Microsoft.Extensions.Localization
+@using TournamentLibrary.Participants;
+@using TournamentLibrary.TournamentParts;
+@using TournamentLibrary;
+@using ChessTournamentMate.Shared.AvailableValues
+
+@rendermode @(new InteractiveServerRenderMode(false))
+
+@inject TournamentController TournamentController
+@inject IStringLocalizer<TournamentManagementLabels> _localizer
+
+
+@if (_tournamentInformation?.TournamentType == TournamentTypes.RoundRobin)
+{
+    <div class="mt-3">
+        <Switch Label="@_localizer["resultsShowGraphicalRepresentationSwitch"]" @bind-Value="@_showGraphicalView"></Switch>
+    </div>
+}
+
+<div class="mt-3">
+    @if (_tournamentInformation?.TournamentType == TournamentTypes.Playoff)
+    {
+        <PlayOffBracket @ref="_playOffBracket" IsTeam="IsTeam" TournamentId="@TournamentId"></PlayOffBracket>
+    }
+    else if (_showGraphicalView)
+    {
+        <RoundRobinTableRender @ref="_roundRobinTable" IsTeam="IsTeam" TournamentId="@TournamentId"></RoundRobinTableRender>
+    } 
+    else
+    {
+        <CurrentStandingsRows @ref="_currentStandingsRows" TournamentId="@TournamentId" RoundNumber="@RoundNumber" IsTeam="@IsTeam"></CurrentStandingsRows>
+    }
+</div>
+
+
+
+@code {
+
+    /// <summary>
+    /// Id of the tournament
+    /// </summary>
+    [Parameter]
+    public string TournamentId { get; set; }
+
+    /// <summary>
+    /// Round number from the start of the tournament
+    /// </summary>
+    [Parameter]
+    public int RoundNumber { get; set; }
+
+    /// <summary>
+    /// True - tournament is for teams, False - tournament is for single players.
+    /// </summary>
+    [Parameter]
+    public bool IsTeam { get; set; }
+
+    private Tournament? _tournamentInformation;
+
+    private CurrentStandingsRows _currentStandingsRows = default!;
+
+    private PlayOffBracket _playOffBracket = default!;
+
+    private RoundRobinTableRender _roundRobinTable = default!;
+
+    private bool _showGraphicalView = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Reload();
+    }
+
+    public async Task Reload()
+    {
+        _tournamentInformation = await TournamentController.GetTournamentInformation(TournamentId);
+        await _currentStandingsRows.ReloadData();
+        if (_tournamentInformation?.TournamentType == TournamentTypes.Playoff && _playOffBracket is not null)
+        {
+            await _playOffBracket.ReloadData();
+        }
+        else if (_tournamentInformation?.TournamentType == TournamentTypes.RoundRobin && _roundRobinTable is not null)
+        {
+            await _roundRobinTable.ReloadData();
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
+}

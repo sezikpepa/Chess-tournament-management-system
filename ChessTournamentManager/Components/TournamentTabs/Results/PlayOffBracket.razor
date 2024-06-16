@@ -1,0 +1,46 @@
+﻿
+@* Based on the type of the tournament. It decides component which retrives data from the database and shows them in the UI as playoff bracket. *@
+
+@using ChessTournamentManager.Components.TournamentTabs.Results
+
+@if (IsTeam)
+{
+	<PlayOffTableTeamRender @ref="_playOffTableRenderTeam" TournamentId="@TournamentId"></PlayOffTableTeamRender>
+}
+else
+{
+	<PlayoffTableSinglerRender @ref="_playOffTableRenderSingle" TournamentId="@TournamentId"></PlayoffTableSinglerRender>
+}
+
+
+@code {
+
+	/// <summary>
+	/// Id of the tournament
+	/// </summary>
+	[Parameter]
+	public string TournamentId { get; set; }
+
+	/// <summary>
+	/// True - tournament is for teams, False - tournament is for single players.
+	/// </summary>
+	[Parameter]
+	public bool IsTeam { get; set; }
+
+	private PlayOffTableTeamRender _playOffTableRenderTeam = default!;
+
+	private PlayoffTableSinglerRender _playOffTableRenderSingle = default!;
+
+	public async Task ReloadData()
+	{
+		if (IsTeam && _playOffTableRenderTeam is not null)
+		{
+			await _playOffTableRenderTeam.ReloadData();
+		}
+		else if (_playOffTableRenderSingle is not null)
+		{
+			await _playOffTableRenderSingle.ReloadData();
+		}
+	}
+
+}

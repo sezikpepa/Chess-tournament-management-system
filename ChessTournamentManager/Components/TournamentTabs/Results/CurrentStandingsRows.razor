@@ -1,0 +1,51 @@
+﻿
+@* Selects component to show based on type of the tournament - single or team. Single and team tournament results need to be shown differently. *@
+
+@using ChessTournamentManager.Components.TournamentTabs.Results
+
+@if(IsTeam == false)
+{
+    <CurrentStandingsRender @ref="_singleStandings" RoundNumber="@RoundNumber" TournamentId="@TournamentId"></CurrentStandingsRender>
+}
+else{
+    <TournamentResultsTeamRender @ref="_teamStandings" TournamentId="@TournamentId" RoundNumber="@RoundNumber"></TournamentResultsTeamRender>
+}
+
+
+@code {
+
+    /// <summary>
+    /// Id of the tournament
+    /// </summary>
+    [Parameter]
+    public string TournamentId { get; set; }
+
+    /// <summary>
+    /// Round number from the start of the tournament
+    /// </summary>
+    [Parameter]
+    public int RoundNumber { get; set; }
+
+    /// <summary>
+    /// True - tournament is for teams, False - tournament is for single players
+    /// </summary>
+    [Parameter]
+    public bool IsTeam { get; set; }
+
+    private CurrentStandingsRender _singleStandings = default!;
+
+    private TournamentResultsTeamRender _teamStandings = default!;
+
+    public async Task ReloadData()
+    {
+        if (!IsTeam)
+        {
+            await _singleStandings.GetCurrentStandings();
+        }
+        else
+        {
+            await _teamStandings.GetCurrentStandings();
+        }
+    }
+
+}

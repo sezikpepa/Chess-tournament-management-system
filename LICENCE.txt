@@ -1,6 +1,9 @@
-MIT License
+﻿MIT License
 
-Copyright (c) 2024 sezikpepa
+Copyright (c) 2023 Claudio Bernasconi
+Copyright (c) 2024 Josef Sezemský
+Copyright (c) 2024 IconDuck
+Copyright (c) 2022-present Kevin Venclovas
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

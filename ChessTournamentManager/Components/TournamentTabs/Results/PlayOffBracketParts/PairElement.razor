@@ -1,0 +1,57 @@
+﻿
+@* Playoff bracket - makes spot for a pair in the tournament. Shows both players and also result of the match *@
+
+@using TournamentLibrary.Participants
+@using TournamentLibrary.TournamentParts
+
+@typeparam TParticipant where TParticipant : class, IParticipant
+
+
+<Spot Participant="RoundPair.White" Points="RoundPair.Result.NotYetSet ? null : RoundPair.WhiteScore" X="X" Y="Y" Width="Width" Height="Height/2" LineWidth="LineWidth"></Spot>
+<Spot Participant="RoundPair.Black" Points="RoundPair.Result.NotYetSet ? null : RoundPair.BlackScore" X="X" Y="Y + Height/2" Width="Width" Height="Height/2" LineWidth="LineWidth" ForBlack="true"></Spot>
+
+
+@code {
+
+	/// <summary>
+	/// Match of the round
+	/// </summary>
+	[Parameter]
+	public RoundPair<TParticipant>? RoundPair { get; set; }
+
+	/// <summary>
+	/// X coordinate of the top left corner
+	/// </summary>
+	[Parameter]
+	public int X { get; set; } 
+
+	/// <summary>
+	/// Y coordinate of the top left corner
+	/// </summary>
+	[Parameter]
+	public int Y { get; set; } 
+
+	/// <summary>
+	/// Width in pixels of the spot
+	/// </summary>
+	[Parameter]
+	public int Width { get; set; } 
+
+	/// <summary>
+	/// Height in pixels of the spot for both players
+	/// </summary>
+	[Parameter]
+	public int Height { get; set; } 
+
+	/// <summary>
+	/// Length of the line in pixels from spot to merging line
+	/// </summary>
+	[Parameter]
+	public int WinnerLineLength { get; set; }
+
+	/// <summary>
+	/// Width in pixels of all lines which will be drawn.
+	/// </summary>
+	[Parameter]
+	public int LineWidth { get; set; }
+}

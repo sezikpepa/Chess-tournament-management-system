@@ -1,0 +1,60 @@
+﻿
+@* Component which shows pairing of the round. Selects correct component based on tournament type - single or team. *@
+
+@using ChessTournamentManager.CodeStructures
+@using ChessTournamentManager.LanguageAssets.TournamentManagementLabels
+@using ChessTournamentMate.Shared;
+@using Microsoft.Extensions.Localization
+@using Newtonsoft.Json;
+@using TournamentLibrary
+@using TournamentLibrary.Participants;
+@using TournamentLibrary.TournamentParts;
+
+@rendermode @(new InteractiveServerRenderMode(false))
+
+@inject IStringLocalizer<TournamentManagementLabels> _localizer
+
+<h1>@_localizer["singlePlayerDrawRoundNumberInfoPart1"] @RoundNumber @_localizer["singlePlayerDrawRoundNumberInfoPart2"] @HowManyRounds</h1>
+
+@if (!IsTeam)
+{
+    <SinglePlayerDrawRender UpdateNextRoundButtonVisibility="UpdateNextRoundButtonVisibility" TournamentId="@TournamentId" RoundNumber="RoundNumber" HowManyRounds="HowManyRounds"></SinglePlayerDrawRender>
+}
+else
+{
+    <TeamDrawRender UpdateNextRoundButtonVisibility="UpdateNextRoundButtonVisibility" TournamentId="@TournamentId" RoundNumber="RoundNumber" HowManyRounds="HowManyRounds"></TeamDrawRender>
+}
+
+
+@code{
+
+    /// <summary>
+    /// Id of the tournament
+    /// </summary>
+    [Parameter]
+    public string TournamentId { get; set; }
+
+    /// <summary>
+    /// Number of the round from the start of the tournament.
+    /// </summary>
+    [Parameter]
+    public int RoundNumber { get; set; }
+
+    /// <summary>
+    /// How many rounds will be played in the tournament in total.
+    /// </summary>
+    [Parameter]
+    public int? HowManyRounds { get; set; }
+
+    /// <summary>
+    /// Tournament is for teams. Otherwise for single players.
+    /// </summary>
+    [Parameter]
+    public bool IsTeam { get; set; }
+
+    /// <summary>
+    /// Method which should update the visibility of the Next round button. (after results are saved).
+    /// </summary>
+    [Parameter]
+    public EventCallback<bool> UpdateNextRoundButtonVisibility { get; set; }
+}

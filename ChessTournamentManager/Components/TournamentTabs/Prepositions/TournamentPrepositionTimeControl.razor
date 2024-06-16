@@ -1,0 +1,19 @@
+﻿@using ChessTournamentManager.LanguageAssets.TournamentForParticipants
+@using DatabaseCommunicator.Models
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<TournamentForParticipantsLabels> _localizer
+
+
+<ul class="list-group list-group-horizontal">
+	<li class="list-group-item w-50">@_localizer["prepositionTimeControl"]</li>
+	<li class="list-group-item w-50">@TimeControl?.ToStringWithCustomTexts(_localizer["prepositionTimeControlFromMove"], _localizer["prepositionTimeControlPerMove"])</li>
+</ul>
+
+@code {
+
+	/// <summary>
+	/// Time control of the tournament
+	/// </summary>
+	[Parameter]
+	public TimeControlSettings? TimeControl { get; set; }
+}

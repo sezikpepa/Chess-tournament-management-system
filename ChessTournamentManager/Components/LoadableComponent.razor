@@ -1,0 +1,21 @@
+﻿
+@* Components which use stream rendering and shows spinner can inherit this component. It helps with providing additional loading time to prevent UI glitches.*@
+
+@code {
+
+	/// <summary>
+	/// Component should show spinner.
+	/// </summary>
+	protected bool _loading = true;
+
+	/// <summary>
+	/// Waits additional time to prevent UI glitches.
+	/// </summary>
+	/// <param name="startExecution">When the execution of the long task started.</param>
+	/// <param name="timeInMilis">Minimum time of how long the spinner should be shown. If the task ends earlier, it waits remaining time.</param>
+	/// <returns></returns>
+	protected async Task WaitMinimumTime(DateTime startExecution, int timeInMilis)
+	{
+		await Task.Delay(Math.Max((startExecution.AddMilliseconds(timeInMilis) - DateTime.Now).Milliseconds, 0));
+	}
+}

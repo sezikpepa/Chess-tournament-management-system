@@ -1,0 +1,112 @@
+﻿
+@* Handles settings of swiss tournament - priorities of auxiliary points. *@
+
+@using ChessTournamentManager.CodeStructures
+@using ChessTournamentManager.Controllers
+@using ChessTournamentManager.LanguageAssets.TournamentManagementLabels
+@using ChessTournamentMate.Shared
+@using DatabaseCommunicator.Models;
+@using DatabaseCommunicator.ModelsManipulators.SettingsManipulators
+@using Microsoft.Extensions.Localization
+@using TournamentLibrary
+@using TournamentLibrary.Participants;
+@using TournamentLibrary.TournamentParts;
+
+@inject TournamentSettingsController TournamentSettingsController
+
+@inject IStringLocalizer<TournamentManagementLabels> _localizer
+
+<link rel="stylesheet" href="css/app.css">
+
+<EditForm Model="@Model" OnValidSubmit="@Submit" FormName="SwissSettingsForm">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+	@for(int i = 0; i < Model.AuxiliaryPoints.Count; i++)
+	{
+		<div class="row mt-2">
+			<div class="col-3">
+				@_localizer[Model.AuxiliaryPoints[i]]
+			</div>
+
+			<div class="col-1">
+				@if (i != 0)
+				{
+					int index = i;
+					<div class="showClickable" @onclick="() => MoveUp(index)">
+						<Icon Size="IconSize.x6" Name="IconName.TriangleFill"></Icon>
+					</div>
+				}
+			</div>
+			<div class="col-1">
+				@if (i != Model.AuxiliaryPoints.Count - 1)
+				{
+					int index = i;
+					<div class="showClickable" @onclick="() => MoveDown(index)">
+						<div class="rotateHalf">
+							<Icon Size="IconSize.x6" Name="IconName.TriangleFill"></Icon>
+						</div>
+					</div>
+				}
+			</div>
+		</div>
+	}
+	
+    <div class="row">
+        <div class="col-2">
+			<Button Class="mt-3" Color="ButtonColor.Success" Type="ButtonType.Submit">@_localizer["save"]</Button>
+        </div>
+    </div>
+</EditForm>
+
+
+@code {
+
+	/// <summary>
+	/// Id of the tournament
+	/// </summary>
+	[Parameter]
+	public string TournamentId { get; set; }
+
+	/// <summary>
+	/// Auxiliary points settings - from form
+	/// </summary>
+	[SupplyParameterFromForm]
+	public SwissTournamentSettings Model { get; set; } = new();
+
+	/// <summary>
+	/// Saves information in the database
+	/// </summary>
+	/// <returns></returns>
+	private async Task Submit()
+	{
+		await TournamentSettingsController.SaveSwissSettings(TournamentId, Model);
+	}
+
+	protected override async Task OnInitializedAsync()
+	{
+		Model = await TournamentSettingsController.GetSwissSettings(TournamentId);
+	}
+
+	/// <summary>
+	/// Increase priority of element
+	/// </summary>
+	/// <param name="index">Id of element</param>
+	/// <returns></returns>
+	private async Task MoveUp(int index)
+	{
+		(Model.AuxiliaryPoints[index - 1], Model.AuxiliaryPoints[index]) = (Model.AuxiliaryPoints[index], Model.AuxiliaryPoints[index - 1]);
+		await InvokeAsync(StateHasChanged);
+	}
+
+	/// <summary>
+	/// Decrease priority of element
+	/// </summary>
+	/// <param name="index">Id of element</param>
+	/// <returns></returns>
+	private async Task MoveDown(int index)
+	{
+		(Model.AuxiliaryPoints[index], Model.AuxiliaryPoints[index + 1]) = (Model.AuxiliaryPoints[index + 1], Model.AuxiliaryPoints[index]);
+		await InvokeAsync(StateHasChanged);
+	}
+}

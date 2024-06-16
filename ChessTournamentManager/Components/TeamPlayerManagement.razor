@@ -1,0 +1,161 @@
+﻿@* 
+Handles player management in the teams *@
+
+@using ChessTournamentManager.CodeStructures
+@using ChessTournamentManager.Controllers
+@using ChessTournamentManager.LanguageAssets.TeamManagement
+@using ChessTournamentMate.Shared
+@using DatabaseCommunicator.Models
+@using Microsoft.Extensions.Localization
+
+
+@inject NavigationUrls NavigationUrls
+@inject TeamManagementController TeamManagementController
+@inject TeamController TeamController
+
+@inject IStringLocalizer<TeamManagementLabels> _localizer;
+
+@rendermode @(new InteractiveServerRenderMode(false))
+
+
+
+<div class="mt-3">
+	<UIResponseMessageDisappear Message="_message"></UIResponseMessageDisappear>
+</div>
+
+@if (_team is not null)
+{
+	@if(!CanModifyTeam)
+	{
+		<div class="mt-3">
+			<UIResponseRender Message="@(new NotExistsInDatabase(_localizer["playersManagementUnable"]))"></UIResponseRender>
+		</div>
+	}
+	<div class="mt-3">
+		<h1>@_team?.Name</h1>
+	</div>
+
+	<div class="mt-3">
+		<ManagingRosterOrderRender CanEdit="CanModifyTeam" PlayerDeletedCallback="PlayerDeletedCall" Players="_players"></ManagingRosterOrderRender>
+	</div>
+
+	if (CanModifyTeam == true)
+	{
+		<div class="mt-3">
+			<Button Color="ButtonColor.Success" @onclick="SaveTeamPlayers">@_localizer["playersManagementSave"]</Button>
+		</div>
+		<div class="mt-3">
+			<PlayersListRender ShowPlayerProfile="(playerId) => NavigationUrls.ToPlayerProfile(playerId)" ActionName="@_localizer["playersManagementAddToTeamButton"]" PlayersWithDisabledAction="_players" PlayerSelectedAction="AddPlayerToTeam"></PlayersListRender>
+		</div>
+	}
+}
+
+
+
+
+
+@code {
+
+	/// <summary>
+	/// Id of the team
+	/// </summary>
+	[Parameter]
+	public string TeamId { get; set; }
+
+	/// <summary>
+	/// User can modify players of the team
+	/// </summary>
+	[Parameter]
+	public bool CanModifyTeam { get; set; } = false;
+
+	/// <summary>
+	/// Informations about team
+	/// </summary>
+	private Team _team { get; set; }
+
+	/// <summary>
+	/// Players who play for the team
+	/// </summary>
+	private List<Player> _players { get; set; } = [];
+
+	/// <summary>
+	/// Message in the UI
+	/// </summary>
+	private QuickResponseMessage? _message;
+
+	protected override async Task OnInitializedAsync()
+	{
+		await GetTeamWithPlayers();
+	}
+
+	protected override async Task OnParametersSetAsync()
+	{
+		await GetTeamWithPlayers();
+	}
+
+	/// <summary>
+	/// Updates UI when the player is deleted from the team
+	/// </summary>
+	/// <returns></returns>
+	public async Task PlayerDeletedCall()
+	{
+		await InvokeAsync(StateHasChanged);
+	}
+
+	/// <summary>
+	/// Saves players in the team
+	/// </summary>
+	/// <returns></returns>
+	public async Task SaveTeamPlayers()
+	{
+		try
+		{
+			await TeamManagementController.SavePlayersOfTeam(_team.Id, _players);
+			_message = new SuccessfulMessage(_localizer["playersManagementSaveSuccess"]);
+		}
+		catch
+		{
+			_message = new UnsuccessfulMessage(_localizer["playersManagementSaveError"]);
+		}
+
+		await InvokeAsync(StateHasChanged);
+	}
+
+	/// <summary>
+	/// Adds new player to the team - not yet saved
+	/// </summary>
+	/// <param name="player"></param>
+	/// <returns></returns>
+	public async Task AddPlayerToTeam(Player player)
+	{
+		if (_players.Contains(player))
+		{
+			return;
+		}
+
+		_players.Add(player);
+		await InvokeAsync(StateHasChanged);
+	}
+
+	/// <summary>
+	/// Retreived team with its players from the database
+	/// </summary>
+	/// <returns></returns>
+	public async Task GetTeamWithPlayers()
+	{
+		TeamWithPlayers result;
+		try
+		{
+			result = await TeamController.GetTeamWithPlayers(TeamId);
+		}
+		catch
+		{
+			_message = new UnsuccessfulMessage(_localizer["playersManagementCannotLoadPlayers"]);
+			return;
+		}
+
+		_team = result.Team;
+		_players = result.Players;
+		_message = null;
+	}
+}

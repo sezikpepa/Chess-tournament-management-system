@@ -1,0 +1,100 @@
+﻿
+@* Component which handles order of players in the team. *@
+
+@using DatabaseCommunicator.Models
+
+@rendermode InteractiveServer
+
+<link rel="stylesheet" href="css/app.css">
+
+<div class="row">
+	<div class="col-1">
+		@OrderNumber
+	</div>
+	<div class="col-6">
+		@Player?.FirstName @Player?.MiddleName @Player?.LastName
+	</div>
+	@if (CanEdit)
+	{
+		<div class="col-1">
+			@if (DisabledUp == false)
+			{
+				<div class="showClickable" @onclick="async (args) => await MoveUpCallBack.InvokeAsync(OrderNumber)">
+					<Icon Size="IconSize.x6" Name="IconName.TriangleFill"></Icon>
+				</div>
+			}
+		</div>
+		<div class="col-1">
+			@if (DisabledDown == false)
+			{
+				<div class="showClickable" @onclick="async (args) => await MoveDownCallBack.InvokeAsync(OrderNumber)">
+					<div class="rotateHalf">
+						<Icon Size="IconSize.x6" Name="IconName.TriangleFill"></Icon>
+					</div>
+				</div>
+			}
+		</div>
+		<div class="col-1">
+			<div class="showClickable" @onclick="async (args) => await DeleteCallBack.InvokeAsync(OrderNumber)">
+				<i class="bi bi-x-lg"></i>
+			</div>
+		</div>
+	}
+</div>
+
+
+
+
+
+
+@code {
+
+	/// <summary>
+	/// Position of the player in the team
+	/// </summary>
+	[Parameter]
+	public int OrderNumber { get; set; }
+
+	/// <summary>
+	/// Information about the player
+	/// </summary>
+	[Parameter]
+	public Player Player { get; set; }
+
+	/// <summary>
+	/// True - it is not possible to increase position of the player
+	/// </summary>
+	[Parameter]
+	public bool DisabledUp { get; set; }
+
+	/// <summary>
+	/// True - it is not possible to decrease position of the player
+	/// </summary>
+	[Parameter]
+	public bool DisabledDown { get; set; }
+
+	/// <summary>
+	/// True - it is possible to change position of the player
+	/// </summary>
+	[Parameter]
+	public bool CanEdit { get; set; } = true;
+
+	/// <summary>
+	/// Function which handles increase of position of the player
+	/// </summary>
+	[Parameter]
+	public EventCallback<int> MoveUpCallBack { get; set; }
+
+	/// <summary>
+	/// Function which handles decrease of position of the player
+	/// </summary>
+	[Parameter]
+	public EventCallback<int> MoveDownCallBack { get; set; }
+
+	/// <summary>
+	/// Function which will delete player from the team
+	/// </summary>
+	[Parameter]
+	public EventCallback<int> DeleteCallBack { get; set; }
+
+}

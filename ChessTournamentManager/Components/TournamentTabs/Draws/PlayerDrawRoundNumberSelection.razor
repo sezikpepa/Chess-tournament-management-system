@@ -1,0 +1,143 @@
+﻿@using ChessTournamentManager.LanguageAssets.TournamentManagementLabels
+@using DatabaseCommunicator.Models
+@using Microsoft.Extensions.Localization
+@using TournamentLibrary.TournamentHandlers
+
+@inject IStringLocalizer<TournamentManagementLabels> _localizer
+
+@if (!DisableEditing)
+{
+    <div class="row mt-3">
+        <div class="col-12 col-md-4 col-xl-2">
+            <Button Class="form-control" Disabled="CurrentRoundNumber >= HowManyRounds || !_allMatchesResultsSet" Color="ButtonColor.Primary" @onclick="OnMoveToNextRound">@_localizer["roundDrawNextRound"]</Button>
+        </div>
+    </div>
+}
+
+
+<div class="mt-3">
+    @if (HowManyRounds.HasValue)
+    {
+        <Pagination ActivePageNumber="@ActivePageNumber" 
+                    TotalPages="@CurrentRoundNumber" 
+                    PageChanged="OnPageChangedAsync"
+                    FirstLinkIcon="IconName.ChevronDoubleLeft"
+                    PreviousLinkIcon="IconName.ChevronLeft"
+                    NextLinkIcon="IconName.ChevronRight"
+                    LastLinkIcon="IconName.ChevronDoubleRight">
+        </Pagination>
+    }
+</div>
+
+<CascadingValue Name="DisableEditingForPreviousRounds" Value="(!TournamentHandler?.CanChangePreviousRounds ?? true) && ActivePageNumber != CurrentRoundNumber">
+    <PlayerDrawRender UpdateNextRoundButtonVisibility="UpdateNextRoundButtonVisibility" TournamentId="@TournamentId" IsTeam="IsTeamTournament" RoundNumber="@RoundNumberToShow" HowManyRounds="@HowManyRounds"></PlayerDrawRender>
+</CascadingValue>
+
+@code {
+
+    protected override void OnParametersSet()
+    {
+        ActivePageNumber = CurrentRoundNumber;
+        RoundNumberToShow = CurrentRoundNumber;
+    }
+
+    /// <summary>
+    /// Id of the tournament
+    /// </summary>
+    [Parameter]
+    public string TournamentId { get; set; }
+
+    /// <summary>
+    /// Tournament is for teams, not for single players
+    /// </summary>
+    [Parameter]
+    public bool IsTeamTournament { get; set; }
+
+    /// <summary>
+    /// Pairs of which round should be shown
+    /// </summary>
+    public int RoundNumberToShow { get; set; }
+
+    /// <summary>
+    /// How many rounds will there be in total in tournament
+    /// </summary>
+    [Parameter]
+    public int? HowManyRounds { get; set; }
+
+    /// <summary>
+    /// Current round in the tournament
+    /// </summary>
+    [Parameter]
+    public int CurrentRoundNumber { get; set; }
+
+    /// <summary>
+    /// Object which handles pairing of rounds
+    /// </summary>
+    [Parameter]
+    public ITournament<Player>? TournamentHandler { get; set; }
+
+    /// <summary>
+    /// Disables changing of the results
+    /// </summary>
+    [CascadingParameter(Name = "DisableEditing")]
+    public bool DisableEditing { get; set; } = false;
+
+    public int ActivePageNumber { get; set; }
+
+    private bool _allMatchesResultsSet { get; set; }
+
+    /// <summary>
+    /// Handles moving to the next round
+    /// </summary>
+    [Parameter]
+    public EventCallback MoveToNextRoundCallBack { get; set; }
+
+    private async Task OnPageChangedAsync(int newPageNumber)
+    {
+        await Task.Run(() => { RoundNumberToShow = newPageNumber; ActivePageNumber = newPageNumber; });
+    }
+
+    /// <summary>
+    /// Shows next round of the tournament
+    /// </summary>
+    /// <returns></returns>
+    private async Task OnMoveToNextRound()
+    {
+        await MoveToNextRoundCallBack.InvokeAsync();
+
+        if (!TournamentHandler.AllMatchResultsBeforeNextRound)
+        {
+            _allMatchesResultsSet = true;
+        }
+        else
+        {
+            _allMatchesResultsSet = false;
+        }
+    }
+
+    /// <summary>
+    /// Based on results disable/enable button which handles creating of new round
+    /// </summary>
+    /// <param name="value"></param>
+    private void UpdateNextRoundButtonVisibility(bool value)
+    {
+        if (!DisableEditing)
+        {
+            if (!TournamentHandler.AllMatchResultsBeforeNextRound)
+            {
+                _allMatchesResultsSet = true;
+            }
+            else
+            {
+                _allMatchesResultsSet = value;
+                if(ActivePageNumber != CurrentRoundNumber)
+                {
+                    _allMatchesResultsSet = false;
+                }
+            }
+            //await InvokeAsync(StateHasChanged);
+        }
+
+    }
+
+}

@@ -1,0 +1,231 @@
+﻿{
+   "CodeGenerationMode": 3,
+   "ContextClassName": "TournamentsContext",
+   "ContextNamespace": null,
+   "DefaultDacpacSchema": null,
+   "FilterSchemas": false,
+   "IncludeConnectionString": false,
+   "ModelNamespace": null,
+   "OutputContextPath": null,
+   "OutputPath": "Models",
+   "PreserveCasingWithRegex": true,
+   "ProjectRootNamespace": "DatabaseCommunicator",
+   "Schemas": null,
+   "SelectedHandlebarsLanguage": 0,
+   "SelectedToBeGenerated": 0,
+   "T4TemplatePath": null,
+   "Tables": [
+      {
+         "Name": "[dbo].[Contact]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[ContactAddress]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[ChessClub]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[Notifications]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[Player]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[PlayerXTeam]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[PlayingEntity]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[PossibleMatchResult]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[Team]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[Tournament]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[TournamentPair]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[TournamentRound]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[TournamentSeries]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[TournamentTimeType]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[TournamentType]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[TournamentXPlayingEntity]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[CreateNewChessClub]",
+         "ObjectType": 1
+      },
+      {
+         "Name": "[dbo].[CreateNewPlayerInstance]",
+         "ObjectType": 1
+      },
+      {
+         "Name": "[dbo].[CreateNewPossibleMatchResult]",
+         "ObjectType": 1
+      },
+      {
+         "Name": "[dbo].[CreateNewSeries]",
+         "ObjectType": 1
+      },
+      {
+         "Name": "[dbo].[CreateNewTournament]",
+         "ObjectType": 1
+      },
+      {
+         "Name": "[dbo].[CreateNewTournamentPair]",
+         "ObjectType": 1
+      },
+      {
+         "Name": "[dbo].[CreateNewTournamentRound]",
+         "ObjectType": 1
+      },
+      {
+         "Name": "[dbo].[CreateNewTournamentType]",
+         "ObjectType": 1
+      },
+      {
+         "Name": "[dbo].[CreateSetResultForTournamentPair]",
+         "ObjectType": 1
+      },
+      {
+         "Name": "[dbo].[GetRegisteredPlayers]",
+         "ObjectType": 1
+      },
+      {
+         "Name": "[dbo].[InsertNewRoundPair]",
+         "ObjectType": 1
+      },
+      {
+         "Name": "[dbo].[InsertNewTournamentRound]",
+         "ObjectType": 1
+      },
+      {
+         "Name": "[dbo].[InsertPlayerContact]",
+         "ObjectType": 1
+      },
+      {
+         "Name": "[dbo].[InsertPlayerContactAddress]",
+         "ObjectType": 1
+      },
+      {
+         "Name": "[dbo].[MoveTournamentToNextRound]",
+         "ObjectType": 1
+      },
+      {
+         "Name": "[dbo].[RegisterPlayerForTournament]",
+         "ObjectType": 1
+      },
+      {
+         "Name": "[dbo].[RegisterUnknownPlayerIntoTournament]",
+         "ObjectType": 1
+      },
+      {
+         "Name": "[dbo].[SetResultForTournamentPair]",
+         "ObjectType": 1
+      },
+      {
+         "Name": "[dbo].[ShowMatchesOfPlayer]",
+         "ObjectType": 1
+      },
+      {
+         "Name": "[dbo].[GetChessClubId]",
+         "ObjectType": 2
+      },
+      {
+         "Name": "[dbo].[GetPlayerId]",
+         "ObjectType": 2
+      },
+      {
+         "Name": "[dbo].[GetPlayerNumberOfDraws]",
+         "ObjectType": 2
+      },
+      {
+         "Name": "[dbo].[GetPlayerNumberOfLosses]",
+         "ObjectType": 2
+      },
+      {
+         "Name": "[dbo].[GetPlayerNumberOfWins]",
+         "ObjectType": 2
+      },
+      {
+         "Name": "[dbo].[GetPlayerWinrate]",
+         "ObjectType": 2
+      },
+      {
+         "Name": "[dbo].[GetRoundId]",
+         "ObjectType": 2
+      },
+      {
+         "Name": "[dbo].[GetTournamentId]",
+         "ObjectType": 2
+      },
+      {
+         "Name": "[dbo].[GetTournamentIdOfRound]",
+         "ObjectType": 2
+      },
+      {
+         "Name": "[dbo].[GetTournamentPairId]",
+         "ObjectType": 2
+      },
+      {
+         "Name": "[dbo].[GetTournamentSeriesId]",
+         "ObjectType": 2
+      },
+      {
+         "Name": "[dbo].[HadPlayerFreeRoundInTournament]",
+         "ObjectType": 2
+      },
+      {
+         "Name": "[dbo].[NumberOfRegisteredPlayersInTournament]",
+         "ObjectType": 2
+      }
+   ],
+   "UiHint": "laptop-isvrruaa.Tournaments.dbo",
+   "UncountableWords": null,
+   "UseBoolPropertiesWithoutDefaultSql": false,
+   "UseDatabaseNames": false,
+   "UseDateOnlyTimeOnly": false,
+   "UseDbContextSplitting": false,
+   "UseFluentApiOnly": true,
+   "UseHandleBars": false,
+   "UseHierarchyId": false,
+   "UseInflector": false,
+   "UseLegacyPluralizer": false,
+   "UseManyToManyEntity": false,
+   "UseNoDefaultConstructor": false,
+   "UseNoObjectFilter": false,
+   "UseNodaTime": false,
+   "UseNullableReferences": false,
+   "UseSchemaFolders": false,
+   "UseSchemaNamespaces": false,
+   "UseSpatial": false,
+   "UseT4": false
+}

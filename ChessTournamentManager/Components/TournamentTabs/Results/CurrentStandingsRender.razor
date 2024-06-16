@@ -1,0 +1,84 @@
+﻿
+@* Generates current results of the tournament and shows them in the UI. *@
+
+
+@using ChessTournamentManager.CodeStructures
+@using ChessTournamentManager.Controllers
+@using ChessTournamentManager.DataServices
+@using ChessTournamentMate.Shared;
+@using ChessTournamentMate.Shared.AvailableValues
+@using DatabaseCommunicator.Models
+@using Newtonsoft.Json;
+@using TournamentLibrary.Participants;
+@using TournamentLibrary.TournamentParts;
+
+@rendermode @(new InteractiveServerRenderMode(false))
+
+@using TournamentLibrary;
+
+
+@inject TournamentStandingsController TournamentStandingsController
+@inject TournamentController TournamentController
+@inject TournamentSettingsController TournamentSettingsController
+
+
+<CurrentStandingsRenderView PlayersWithPoints="@PlayersWithPoints" AuxiliaryPoints="@_auxiliaryPoints"></CurrentStandingsRenderView>
+
+
+@code {
+
+    /// <summary>
+    /// Number of round from the start of the tournament
+    /// </summary>
+    [Parameter]
+    public int RoundNumber { get; set; }
+
+    /// <summary>
+    /// Id of the tournament
+    /// </summary>
+    [Parameter]
+    public string TournamentId { get; set; }
+
+    /// <summary>
+    /// Standings of the tournament
+    /// </summary>
+    public List<ParticipantWithPoints<Player>> PlayersWithPoints { get; set; } = new();
+
+    /// <summary>
+    /// Order of auxiliary points how they should be used to dermine resuts of the tournament
+    /// </summary>
+    private List<string> _auxiliaryPoints = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        var tournamentInformation = await TournamentController.GetTournamentInformation(TournamentId);
+
+        _auxiliaryPoints = [];
+        if (tournamentInformation.TournamentType == TournamentTypes.Swiss)
+        {
+            _auxiliaryPoints = (await TournamentSettingsController.GetSwissSettings(TournamentId)).AuxiliaryPoints;
+        }
+
+        await GetCurrentStandings();
+    }
+
+    /// <summary>
+    /// Sets standings of the tournament based on matches
+    /// </summary>
+    /// <returns></returns>
+    public async Task GetCurrentStandings()
+    {
+        var tmp = await TournamentStandingsController.GetCurrentStandings(TournamentId, RoundNumber);
+
+        var query = tmp.OrderByDescending(x => x.Score);
+
+        foreach (var auxiliaryPoint in _auxiliaryPoints)
+        {
+            query = query.ThenByDescending(x => new ReflectionCustomMethods().GetPropertyValue<decimal>(x, auxiliaryPoint));
+        }
+
+        PlayersWithPoints = query.ToList();
+
+        await InvokeAsync(StateHasChanged);
+    }
+}

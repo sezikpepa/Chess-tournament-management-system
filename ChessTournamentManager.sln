@@ -1,0 +1,55 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34309.116
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChessTournamentManager", "ChessTournamentManager\ChessTournamentManager.csproj", "{7BA92368-4991-437A-B6FB-7B65AAF5EF0A}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChessTournamentManager.Client", "ChessTournamentManager.Client\ChessTournamentManager.Client.csproj", "{97159CB7-9B91-404E-9CA2-3FCDA12161E5}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DatabaseCommunicator", "DatabaseCommunicator\DatabaseCommunicator.csproj", "{9D49C7A2-3BB6-414B-B699-33AC0CE3C09A}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TournamentLibrary", "TournamentLibrary\TournamentLibrary.csproj", "{C9B5C3B2-A851-4B13-A194-82A28C059496}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChessTournamentManager.Shared", "Shared\ChessTournamentManager.Shared.csproj", "{089B5705-3BF9-400C-BD13-AC27073CD877}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tests", "Tests\Tests.csproj", "{A7321449-073F-4652-B215-7AEBC4DCCA61}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7BA92368-4991-437A-B6FB-7B65AAF5EF0A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7BA92368-4991-437A-B6FB-7B65AAF5EF0A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7BA92368-4991-437A-B6FB-7B65AAF5EF0A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7BA92368-4991-437A-B6FB-7B65AAF5EF0A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{97159CB7-9B91-404E-9CA2-3FCDA12161E5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{97159CB7-9B91-404E-9CA2-3FCDA12161E5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{97159CB7-9B91-404E-9CA2-3FCDA12161E5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{97159CB7-9B91-404E-9CA2-3FCDA12161E5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9D49C7A2-3BB6-414B-B699-33AC0CE3C09A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9D49C7A2-3BB6-414B-B699-33AC0CE3C09A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9D49C7A2-3BB6-414B-B699-33AC0CE3C09A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9D49C7A2-3BB6-414B-B699-33AC0CE3C09A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C9B5C3B2-A851-4B13-A194-82A28C059496}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C9B5C3B2-A851-4B13-A194-82A28C059496}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C9B5C3B2-A851-4B13-A194-82A28C059496}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C9B5C3B2-A851-4B13-A194-82A28C059496}.Release|Any CPU.Build.0 = Release|Any CPU
+		{089B5705-3BF9-400C-BD13-AC27073CD877}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{089B5705-3BF9-400C-BD13-AC27073CD877}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{089B5705-3BF9-400C-BD13-AC27073CD877}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{089B5705-3BF9-400C-BD13-AC27073CD877}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A7321449-073F-4652-B215-7AEBC4DCCA61}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A7321449-073F-4652-B215-7AEBC4DCCA61}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A7321449-073F-4652-B215-7AEBC4DCCA61}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A7321449-073F-4652-B215-7AEBC4DCCA61}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {3AF57905-81F9-4557-90DD-8F12D24C82B5}
+	EndGlobalSection
+EndGlobal

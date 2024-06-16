@@ -1,0 +1,117 @@
+﻿
+@* Handles settings of time control in the tournament. *@
+
+@using ChessTournamentManager.Controllers
+@using ChessTournamentManager.DataServices
+@using ChessTournamentManager.LanguageAssets.TournamentManagementLabels
+@using DatabaseCommunicator.Models
+@using Microsoft.Extensions.Localization
+
+
+@inject TournamentSettingsController TournamentSettingsController
+@inject IStringLocalizer<TournamentManagementLabels> _localizer
+
+@if(Model is not null)
+{
+    <EditForm Model="@Model" OnValidSubmit="Submit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+        @for (int i = 0; i < Model.Elements.Count; i++)
+        {
+            int index = i;
+            <div class="row">
+                <div class="col-2">
+                    <label class="form-label" for="selectTournamentSeriesCombobox">@_localizer["settingsTabTimeControlIncrement"]</label>
+                    <NumberInput TValue="int" class="form-control" @bind-Value="Model.Elements[index].Increment"></NumberInput>
+                </div>
+                <div class="col-2">
+                    <label class="form-label" for="selectTournamentSeriesCombobox">@_localizer["settingsTabTimeControlFromMove"]</label>
+                    <NumberInput Disabled="i == 0" TValue="int" class="form-control" @bind-Value="Model.Elements[index].UntilMove"></NumberInput>
+                </div>
+                <div class="col-2">
+                    <label class="form-label" for="selectTournamentSeriesCombobox">@_localizer["settingsTabTimeControlHours"]</label>
+                    <NumberInput TValue="int" class="form-control" @bind-Value="Model.Elements[index].AvailableTimeHours"></NumberInput>
+                </div>
+                <div class="col-2">
+                    <label class="form-label" for="selectTournamentSeriesCombobox">@_localizer["settingsTabTimeControlMinutes"]</label>
+                    <NumberInput TValue="int" class="form-control" @bind-Value="Model.Elements[index].AvailableTimeMinutes"></NumberInput>
+                </div>
+                <div class="col-2">
+                    <label class="form-label" for="selectTournamentSeriesCombobox">@_localizer["settingsTabTimeControlSeconds"]</label>
+                    <NumberInput TValue="int" class="form-control" @bind-Value="Model.Elements[index].AvailableTimeSeconds"></NumberInput>
+                </div>
+            </div>
+        }
+
+
+        <div class="col-1 mt-3">
+            <Button Color="ButtonColor.Success" @onclick="AddSet">
+                <i class="bi bi-plus-circle"></i>
+            </Button>
+            <Button Color="ButtonColor.Danger" @onclick="DeleteSet" Disabled="Model.Elements.Count <= 0">
+                <i class="bi bi-x-circle"></i>
+            </Button>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-2">
+                <Button Color="ButtonColor.Success" Type="ButtonType.Submit">@_localizer["settingsTabTimeControlSaveButton"]</Button>
+            </div>
+        </div>
+
+    </EditForm>
+}
+
+@code {
+
+    /// <summary>
+    /// Information from form
+    /// </summary>
+    [SupplyParameterFromForm]
+    TimeControlSettings? Model { get; set; }
+
+    /// <summary>
+    /// Id of the tournament
+    /// </summary>
+    [Parameter]
+    public string TournamentId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Model = await TournamentSettingsController.GetTournamentTimeControlAsync(TournamentId);
+    }
+
+    /// <summary>
+    /// Add another section of time control 
+    /// </summary>
+    /// <param name="e">null</param>
+    /// <returns></returns>
+    private async Task AddSet(MouseEventArgs e)
+    {
+        Model?.Elements.Add(new());
+        await InvokeAsync(StateHasChanged);
+    }
+
+    /// <summary>
+    /// Removes last section of time control
+    /// </summary>
+    /// <param name="e">null</param>
+    /// <returns></returns>
+    private async Task DeleteSet(MouseEventArgs e)
+    {
+        Model?.Elements.RemoveAt(Model.Elements.Count - 1);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    /// <summary>
+    /// Saves information in the database
+    /// </summary>
+    /// <returns></returns>
+    private async Task Submit()
+    {
+        if(Model is not null)
+        {
+            await TournamentSettingsController.SaveTimeSettingsAsync(TournamentId, Model);
+        }
+    }
+}

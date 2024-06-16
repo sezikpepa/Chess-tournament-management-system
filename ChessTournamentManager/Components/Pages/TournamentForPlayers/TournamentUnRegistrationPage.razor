@@ -1,0 +1,103 @@
+﻿
+@* Page where it is possible to cancel registration from the tournament. *@
+
+@page "/tournament/{TournamentId}/unregisterSingle"
+
+@rendermode @(new InteractiveServerRenderMode(false))
+@attribute [StreamRendering]
+
+@using ChessTournamentManager.CodeStructures
+@using ChessTournamentManager.Controllers
+@using ChessTournamentManager.LanguageAssets.TournamentRegistration
+@using ChessTournamentMate.Shared
+@using DatabaseCommunicator.Models
+@using Microsoft.Extensions.Localization
+
+
+@attribute [Authorize]
+
+@inject TournamentController TournamentController
+@inject TournamentRegistrationController TournamentRegistrationController
+@inject UserInformation UserInformation
+@inject NavigationUrls NavigationUrls
+
+@inject IStringLocalizer<TournamentRegistrationLabels> _localizer
+
+<title>@_localizer["unregisterSingleTitle"]</title>
+
+<Button Color="ButtonColor.Success" @onclick="() => NavigationUrls.ToMyTournaments()">@_localizer["unregisterSingleBackToTournaments"]</Button>
+
+<div class="mt-3">
+	<UIResponseRender Message="_messageAboutUnregistering"></UIResponseRender>
+</div>
+
+<div class="mt-3">
+	<UIResponseRender Message="_messageAboutUnregistrationOutcome"></UIResponseRender>
+</div>
+
+<div class="mt-3">
+	@if (_messageAboutUnregistering?.MessageType == QuickResponseMessageTypes.Success)
+	{
+		<Button Color="ButtonColor.Success" @onclick="UnregisterFromTournament">@_localizer["unregisterSingleCancelRegistration"]</Button>
+	}
+</div>
+
+
+@code {
+
+	/// <summary>
+	/// Id of the tournament
+	/// </summary>
+	[Parameter]
+	public string TournamentId { get; set; }
+
+	/// <summary>
+	/// Message in the UI if the player can unregister from the team
+	/// </summary>
+	private QuickResponseMessage? _messageAboutUnregistering { get; set; }
+
+	/// <summary>
+	/// Message in the UI about outcome of unregistration
+	/// </summary>
+	private QuickResponseMessage? _messageAboutUnregistrationOutcome { get; set; }
+
+	protected override async Task OnInitializedAsync()
+	{
+		string accountId = (await UserInformation.GetLoggedUserIdAsync())!;
+
+		Tournament tournamentInformation = await TournamentController.GetTournamentInformation(TournamentId);
+
+		if (tournamentInformation.IsTeam)
+		{
+			_messageAboutUnregistering = new UnsuccessfulMessage(_localizer["unregisterSingleNotForTeams"]);
+			return;
+		}
+
+		_messageAboutUnregistering = await TournamentRegistrationController.CanUnregisterSingle(TournamentId, accountId);
+
+		await InvokeAsync(StateHasChanged);
+	}
+
+
+	/// <summary>
+	/// Process which will unregister player from the tournament
+	/// </summary>
+	/// <returns></returns>
+	private async Task UnregisterFromTournament()
+	{
+		string accountId = (await UserInformation.GetLoggedUserIdAsync())!;
+
+		_messageAboutUnregistering = await TournamentRegistrationController.CanUnregisterSingle(TournamentId, accountId);
+		if(_messageAboutUnregistering.MessageType != QuickResponseMessageTypes.Success)
+		{
+			await InvokeAsync(StateHasChanged);
+			return;
+		}
+
+		await TournamentRegistrationController.UnregisterFromTournamentSingle(TournamentId, accountId);
+
+		_messageAboutUnregistering = null;
+		_messageAboutUnregistrationOutcome = new SuccessfulMessage(_localizer["unregisterSingleConfirmation"]);
+		await InvokeAsync(StateHasChanged);
+	}
+}

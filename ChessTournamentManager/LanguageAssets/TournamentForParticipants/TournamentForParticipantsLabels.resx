@@ -1,0 +1,219 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="mainMarkTournamentAsFavourite" xml:space="preserve">
+    <value>Mark tournament as favourite</value>
+  </data>
+  <data name="mainNotExistingTournament" xml:space="preserve">
+    <value>This tournament does not exist</value>
+  </data>
+  <data name="mainTabsDraws" xml:space="preserve">
+    <value>Round draws</value>
+  </data>
+  <data name="mainTabsPlayers" xml:space="preserve">
+    <value>Players</value>
+  </data>
+  <data name="mainTabsPreposition" xml:space="preserve">
+    <value>Preposition</value>
+  </data>
+  <data name="mainTabsResults" xml:space="preserve">
+    <value>Results</value>
+  </data>
+  <data name="mainTabsTeams" xml:space="preserve">
+    <value>Teams</value>
+  </data>
+  <data name="mainUnmarkTournamentAsFavourite" xml:space="preserve">
+    <value>Unmark tournament as favourite</value>
+  </data>
+  <data name="No" xml:space="preserve">
+    <value>No</value>
+  </data>
+  <data name="prepositionAddress" xml:space="preserve">
+    <value>Location</value>
+  </data>
+  <data name="prepositionDate" xml:space="preserve">
+    <value>Date</value>
+  </data>
+  <data name="prepositionDrawType" xml:space="preserve">
+    <value>Round pairing</value>
+  </data>
+  <data name="prepositionEndDate" xml:space="preserve">
+    <value>End date</value>
+  </data>
+  <data name="prepositionExpectedNumberOfRounds" xml:space="preserve">
+    <value>Expected number of rounds</value>
+  </data>
+  <data name="prepositionMaximumNumberOfPlayers" xml:space="preserve">
+    <value>Maximum number of players</value>
+  </data>
+  <data name="prepositionMaximumNumberOfTeams" xml:space="preserve">
+    <value>Maximum number of teams</value>
+  </data>
+  <data name="prepositionNumberOfRegisteredPlayers" xml:space="preserve">
+    <value>Number of registered players</value>
+  </data>
+  <data name="prepositionNumberOfRegisteredTeams" xml:space="preserve">
+    <value>Number of registered teams</value>
+  </data>
+  <data name="prepositionRegistrationClosed" xml:space="preserve">
+    <value>Registration close on</value>
+  </data>
+  <data name="prepositionRegistrationOpened" xml:space="preserve">
+    <value>Registration opened from</value>
+  </data>
+  <data name="prepositionStartDate" xml:space="preserve">
+    <value>Start date</value>
+  </data>
+  <data name="prepositionTeamSize" xml:space="preserve">
+    <value>Team size</value>
+  </data>
+  <data name="prepositionTeamTournament" xml:space="preserve">
+    <value>Team tournament</value>
+  </data>
+  <data name="prepositionTimeControl" xml:space="preserve">
+    <value>Time control</value>
+  </data>
+  <data name="prepositionTimeControlFromMove" xml:space="preserve">
+    <value>From move</value>
+  </data>
+  <data name="prepositionTimeControlPerMove" xml:space="preserve">
+    <value>per move</value>
+  </data>
+  <data name="prepositionTimeControlType" xml:space="preserve">
+    <value>Time control type</value>
+  </data>
+  <data name="prepositionTitle" xml:space="preserve">
+    <value>Tournament prepositions</value>
+  </data>
+  <data name="prepositionTournamentCannotLoad" xml:space="preserve">
+    <value>Cannot load the tournament, please try it later</value>
+  </data>
+  <data name="prepositionTournamentDescription" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="prepositionTournamentName" xml:space="preserve">
+    <value>Tournament name</value>
+  </data>
+  <data name="title" xml:space="preserve">
+    <value>Tournament information</value>
+  </data>
+  <data name="Yes" xml:space="preserve">
+    <value>Yes</value>
+  </data>
+</root>

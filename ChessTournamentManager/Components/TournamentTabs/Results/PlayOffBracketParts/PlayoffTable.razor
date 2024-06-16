@@ -1,0 +1,71 @@
+﻿
+@* Gerates whole playoff bracket with spots for all matches and participants, including results of matches. *@
+
+
+@using TournamentLibrary.Participants
+@using TournamentLibrary.TournamentParts
+
+
+@typeparam TParticipant where TParticipant : class, IParticipant
+
+
+<div style="position: absolute; width: @((int)(Math.Log2(ForHowManyPlayers) * (RoundWidth + OutLineLength * 2)))px; height: @((int)(ForHowManyPlayers * (PairSpace / 2 + Height/2)))px;">
+    @for (int i = 0; i < RoundDraws.Count(); i++)
+    {
+        <PlayOffRound ForHowManyPlayers="(int)(ForHowManyPlayers / (Math.Pow(2, i)))" RoundPairs="RoundDraws[i]?.GetRoundPairs() ?? []" XStart="XStart + (RoundWidth * i) + (OutLineLength * (i * 2))" Height="Height" PairSpace="PairSpace * (int)Math.Pow(2, i)" RoundWidth="RoundWidth" OutLineLength="OutLineLength" LineWidth="LineWidth"></PlayOffRound>
+    }
+</div>
+
+
+
+@code {
+
+    /// <summary>
+    /// Pairing of all known rounds. On index 0 is the first round, on index 1 is the second round and so on.
+    /// </summary>
+    [Parameter]
+    public List<RoundDraw<TParticipant>> RoundDraws { get; set; } = [];
+
+    /// <summary>
+    /// Location in the UI of the first pair of the first round.
+    /// </summary>
+    [Parameter]
+    public int XStart { get; set; } = 10;
+
+    /// <summary>
+    /// Height of the sport for one player.
+    /// </summary>
+    [Parameter]
+    public int Height { get; set; } = 40;
+
+    /// <summary>
+    /// Empty space between two pairs in the same round.
+    /// </summary>
+    [Parameter]
+    public int PairSpace { get; set; } = 30;
+
+    /// <summary>
+    /// Width of each round.
+    /// </summary>
+    [Parameter]
+    public int RoundWidth { get; set; } = 200;
+
+    /// <summary>
+    /// Width of the line connecting two rounds.
+    /// </summary>
+    [Parameter]
+    public int OutLineLength { get; set; } = 40;
+
+    /// <summary>
+    /// Stroke width of each line in the bracket.
+    /// </summary>
+    [Parameter]
+    public int LineWidth { get; set; } = 3;
+
+    /// <summary>
+    /// How many players is registered in the tournament. How many spots should be generated int he first round.
+    /// </summary>
+    [Parameter]
+    public int ForHowManyPlayers { get; set; }
+
+}

@@ -1,0 +1,164 @@
+﻿@using ChessTournamentManager.LanguageAssets.Tournaments
+@using DatabaseCommunicator.Models
+@using Microsoft.Extensions.Localization
+
+@inject IStringLocalizer<TournamentsLabels> _localizer;
+
+<div class="row">
+	<div class="col col-xl-2">
+		<label class="form-label">@_localizer["uiFilterSingleTeam"]</label>
+		<select class="form-select" value="1" @onchange="async (value) => await OnlyTeamOrSingleChanged(value)">
+			<option value="1">@_localizer["uiFilterBoth"]</option>
+			<option value="2">@_localizer["uiFilterSingle"]</option>
+			<option value="3">@_localizer["uiFilterTeam"]</option>
+		</select>
+	</div>
+</div>
+
+
+<div class="row mb-3">
+	<div class="col col-md col-xl-2 mt-3">
+		<Button Class="form-control" Color="ButtonColor.Primary" @onclick="OrderByDate">@_localizer["uiFilterByDate"]</Button>
+	</div>
+	<div class="col col-md col-xl-2 mt-3">
+			<Button Class="form-control" Color="ButtonColor.Primary" @onclick="OrderByName">@_localizer["uiFilterByName"]</Button>
+	</div>
+</div>
+
+
+@for(int i = 0; i < Tournaments?.Count; i++)
+{
+
+	@if(Tournaments[i].IsTeam && _filterBasedOnParticipants == SingleTeamNone.Single)
+	{
+		continue;
+	}
+
+	@if (!Tournaments[i].IsTeam && _filterBasedOnParticipants == SingleTeamNone.Team)
+	{
+		continue;
+	}
+
+	<div class="col col-md-6 col-xl-3 float-start">
+		<div class="card m-1">
+			<TournamentCard Tournament="@Tournaments[i]" 
+							ShowTournamentUnRegister="ShowTournamentUnRegister" 
+							TournamentUnRegister="TournamentUnRegister"
+							ShowRegister="ShowRegister"
+							RegisterUserForTournamentCallBack="RegisterUserForTournamentCallBack"
+							ShowManagerTournament="ShowManagerTournament"
+							ManagerTournamentCallBack="ManagerTournamentCallBack"
+							ShowTournamentInformation="ShowTournamentInformation"
+							TournamentInformationCallBack="TournamentInformationCallBack">
+			</TournamentCard>
+		</div>
+	</div>
+}
+
+
+
+@code {
+
+	/// <summary>
+	/// Tournaments which should be shown on the cards
+	/// </summary>
+	[Parameter]
+	public List<Tournament> Tournaments { get; set; } = [];
+
+	/// <summary>
+	/// Button which performs cancellation of the registration from the tournament should be shown
+	/// </summary>
+	[Parameter]
+	public bool ShowTournamentUnRegister { get; set; } = false;
+
+	/// <summary>
+	/// Action which performs cancellation of the registration from the tournament
+	/// </summary>
+	[Parameter]
+	public EventCallback<string> TournamentUnRegister { get; set; }
+
+	/// <summary>
+	/// Button which performs registration to the tournament should be shown
+	/// </summary>
+	[Parameter]
+	public bool ShowRegister { get; set; } = false;
+
+	/// <summary>
+	/// Action which performs registration to the tournament
+	/// </summary>
+	[Parameter]
+	public EventCallback<string> RegisterUserForTournamentCallBack { get; set; }
+
+	/// <summary>
+	/// Buton which shows tournament management page should be shown
+	/// </summary>
+	[Parameter]
+	public bool ShowManagerTournament { get; set; } = false;
+
+	/// <summary>
+	/// Action which shows tournament management page
+	/// </summary>
+	[Parameter]
+	public EventCallback<string> ManagerTournamentCallBack { get; set; }
+
+	/// <summary>
+	/// Button which shows page with information about the tournament should be shown
+	/// </summary>
+	[Parameter]
+	public bool ShowTournamentInformation { get; set; } = false;
+
+	/// <summary>
+	/// Action which shows information about the tournament
+	/// </summary>
+	[Parameter]
+	public EventCallback<string> TournamentInformationCallBack { get; set; }
+
+	/// <summary>
+	/// Information which types of tournament should be shown team/single/both
+	/// </summary>
+	private SingleTeamNone _filterBasedOnParticipants;
+
+	/// <summary>
+	/// Possible values for types of tournaments, which should be shown
+	/// </summary>
+	private enum SingleTeamNone
+	{
+		Both = 1,
+		Single = 2,
+		Team = 3
+	}
+
+	/// <summary>
+	/// Shows only tournaments satisfying the criteria team/single/bth
+	/// </summary>
+	/// <param name="matchResult"></param>
+	/// <returns></returns>
+	public async Task OnlyTeamOrSingleChanged(ChangeEventArgs matchResult)
+	{
+		int selectedOption = int.Parse(matchResult.Value.ToString());
+		_filterBasedOnParticipants = (SingleTeamNone)selectedOption;
+		await InvokeAsync(StateHasChanged);
+	}
+
+	/// <summary>
+	/// Orders tournaments by date and shows them in this order in the UI
+	/// </summary>
+	/// <param name="e">null</param>
+	/// <returns></returns>
+	private async Task OrderByDate(MouseEventArgs e)
+	{
+		Tournaments = Tournaments.OrderBy(x => x.StartDate).ToList();
+		await InvokeAsync(StateHasChanged);
+	}
+
+	/// <summary>
+	/// Orders tournaments by name and shows them in this order in the UI
+	/// </summary>
+	/// <param name="e">null</param>
+	/// <returns></returns>
+	private async Task OrderByName(MouseEventArgs e)
+	{
+		Tournaments = Tournaments.OrderBy(x => x.TournamentName).ToList();
+		await InvokeAsync(StateHasChanged);
+	}
+}

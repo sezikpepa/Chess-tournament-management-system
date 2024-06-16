@@ -1,0 +1,83 @@
+﻿
+@* Handles settings of how are results calculated in the tournament. *@
+
+@using ChessTournamentManager.Controllers
+@using ChessTournamentManager.LanguageAssets.TournamentManagementLabels
+@using DatabaseCommunicator.Models
+@using Microsoft.Extensions.Localization
+
+@rendermode InteractiveServer
+
+@inject TournamentSettingsController TournamentSettingsController
+@inject IStringLocalizer<TournamentManagementLabels> _localizer
+
+<EditForm OnValidSubmit="Submit" Model="Model">
+	<DataAnnotationsValidator />
+	<ValidationSummary />
+	<div class="row">
+		<div class="col-3">
+			<Switch Label="@_localizer["settingsTabResultsSettingsPointsPerWinOrNot"]" @bind-Value="Model.CalculateByPointsPerWinDraw"></Switch>
+		</div>
+	</div>
+
+	@if (Model.CalculateByPointsPerWinDraw)
+	{
+		<div class="row">
+			<div class="col-3">
+				<label class="form-label">@_localizer["settingsTabResultsSettingsPointsPerWin"]</label>
+				<InputNumber class="form-control" @bind-Value="Model.PointsForWin"></InputNumber>
+			</div>
+			<div class="col-3">
+				<label class="form-label">@_localizer["settingsTabResultsSettingsPointsPerDraw"]</label>
+				<InputNumber class="form-control" @bind-Value="Model.PointsForDraw"></InputNumber>
+			</div>
+		</div>
+	}
+
+	<div class="mt-3">
+		<Button Color="ButtonColor.Success" Type="ButtonType.Submit">@_localizer["settingsTabResultsSettingsSaveButton"]</Button>
+	</div>
+
+</EditForm>
+
+
+
+
+
+
+@code {
+
+	/// <summary>
+	/// Id of the tournament
+	/// </summary>
+	[Parameter]
+	public string TournamentId { get; set; }
+
+	/// <summary>
+	/// Information about results - from form
+	/// </summary>
+	[SupplyParameterFromForm]
+	public ResultsSettings Model { get; set; } = new();
+
+
+	protected override async Task OnInitializedAsync()
+	{
+		Model = await TournamentSettingsController.GetResultsSettingsAsync(TournamentId);
+	}
+
+	/// <summary>
+	/// Saves information about results settings in the datbase
+	/// </summary>
+	/// <returns></returns>
+	private async Task Submit()
+	{
+		if(Model.CalculateByPointsPerWinDraw == false)
+		{
+			Model.PointsForDraw = null;
+			Model.PointsForWin = null;
+		}
+
+		await TournamentSettingsController.SaveResultsSettingsAsync(TournamentId, Model);
+	}
+
+}

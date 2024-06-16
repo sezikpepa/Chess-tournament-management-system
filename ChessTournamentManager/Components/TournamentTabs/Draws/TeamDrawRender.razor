@@ -1,0 +1,200 @@
+﻿
+@* Shows round draw of the tournament for teams and communicates with the database*@
+
+@using ChessTournamentManager.Controllers
+@using ChessTournamentManager.DataServices
+@using ChessTournamentManager.LanguageAssets.TournamentManagementLabels
+@using ChessTournamentMate.Shared
+@using ChessTournamentMate.Shared.QuickResponseMessages
+@using DatabaseCommunicator.Models
+@using Microsoft.Extensions.Localization
+@using TournamentLibrary
+@using TournamentLibrary.Participants
+@using TournamentLibrary.TournamentParts
+
+@inject RoundDrawGenerator RoundDrawGenerator
+
+@inject RoundDrawController RoundDrawController
+
+@inject IStringLocalizer<TournamentManagementLabels> _localizer
+
+@rendermode @(new InteractiveServerRenderMode(false))
+@attribute [StreamRendering]
+
+
+@if (!_loading)
+{
+    @if (_messageForUser is not null)
+    {
+        <UIResponseRender Message="_messageForUser"></UIResponseRender>
+
+        @if (!DisableEditing)
+        {
+            <Button Color="ButtonColor.Success" @onclick="GenerateRoundDraw">@_localizer["teamDrawGenerateRoundButton"]</Button>
+        }
+    }
+
+
+    else if (RoundDraw is not null)
+    {
+        foreach (var pair in RoundDraw.GetRoundPairs())
+        {
+            <TeamDrawView RoundPair="pair"
+                          SubMatches="SubPairs.Where(x => ((x.Item1.White?.Id ?? null) == (pair.White?.Id ?? null)) && ((x.Item1.Black?.Id ?? null) == (pair.Black?.Id ?? null))).Select(x => x.Item2).ToList().First()"
+                          SaveMatchResultsCallBack="SaveMatchResults"
+                          PlayersWithPoints="PlayersWithPoints"
+                          ResultOrTieBreakChanged="async () => await UpdateNextRoundButtonVisibility.InvokeAsync(false)">
+            </TeamDrawView>
+        }
+    }
+}
+else
+{
+    <BasicSpinner></BasicSpinner>
+}
+
+
+
+
+@code {
+
+    /// <summary>
+    /// Id of the tournament
+    /// </summary>
+    [Parameter]
+    public string TournamentId { get; set; }
+
+    /// <summary>
+    /// Number of round from the start of the tournametn
+    /// </summary>
+    [Parameter]
+    public int RoundNumber { get; set; }
+
+    /// <summary>
+    /// How many rounds will be played in the tournament
+    /// </summary>
+    [Parameter]
+    public int? HowManyRounds { get; set; }
+
+    /// <summary>
+    /// After save, button which enables to go to the next round and generated should refresh visibility, this is the method will handle it
+    /// </summary>
+    [Parameter]
+    public EventCallback<bool> UpdateNextRoundButtonVisibility { get; set; }
+
+    [CascadingParameter(Name = "IsDrawPossible")]
+    public bool MatchCanEndWithDraw { get; set; } = true;
+
+    [CascadingParameter(Name = "DisableEditing")]
+    public bool DisableEditing { get; set; } = false;
+
+
+    public RoundDraw<Team>? RoundDraw { get; set; }
+
+    public IEnumerable<ParticipantWithPoints<Player>> PlayersWithPoints { get; set; } = [];
+
+    public QuickResponseMessage? _messageForUser { get; set; }
+
+    private bool _loading = false; 
+
+    public List<Tuple<RoundPair<Team>, List<RoundPair<Player>>>> SubPairs = [];
+
+    private int _shownRoundDraw = -1;
+
+    public async void SaveMatchResults((RoundPair<Team>, List<RoundPair<Player>>) changedResults)
+    {
+        await RoundDrawController.SavePairSubMatches(TournamentId, RoundNumber, changedResults.Item1, changedResults.Item2);
+
+        await UpdateNextRoundVisibility();
+    }
+
+    private async Task UpdateNextRoundVisibility()
+    {
+        bool areSet = false;
+        if (RoundDraw?.GetRoundPairs().Count > 0)
+        {
+            areSet = await RoundDrawController.DoAllMatchesHaveResultTeam(TournamentId, RoundNumber, MatchCanEndWithDraw);
+        }
+
+        await UpdateNextRoundButtonVisibility.InvokeAsync(areSet);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (RoundNumber != _shownRoundDraw || RoundDraw is null)
+        {
+            await LoadMatches();
+        }
+        await UpdateNextRoundVisibility();
+
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _messageForUser = null;
+        if (RoundNumber != _shownRoundDraw || RoundDraw is null)
+        {
+            await LoadMatches();
+        }
+    }
+
+    /// <summary>
+    /// Retreives all matches with current points from the database
+    /// </summary>
+    /// <returns></returns>
+    public async Task LoadMatches()
+    {
+        _loading = true;
+        _shownRoundDraw = RoundNumber;
+        await GetRoundDraw();
+        await GetPlayersWithPoints();
+        _loading = false;
+    }
+
+    /// <summary>
+    /// Generate new round draw and show it in the UI
+    /// </summary>
+    /// <param name="e"></param>
+    /// <returns></returns>
+    private async Task GenerateRoundDraw(MouseEventArgs e)
+    {
+        _messageForUser = null;
+        _loading = true;
+        await RoundDrawGenerator.GenerateRoundDrawTeamAsync(TournamentId, RoundNumber);
+        await GetRoundDraw();
+        await GetPlayersWithPoints();
+        _loading = false;
+    }
+
+    /// <summary>
+    /// Retreives scores of players they have obtained in the tournament
+    /// </summary>
+    /// <returns></returns>
+    private async Task GetPlayersWithPoints()
+    {
+        PlayersWithPoints = await RoundDrawController.GetPlayersWithPointsTeamTournament(TournamentId, RoundNumber);
+    }
+
+    /// <summary>
+    /// Retreives round draw from database
+    /// </summary>
+    /// <returns></returns>
+    private async Task GetRoundDraw()
+    {
+        await InvokeAsync(StateHasChanged);
+        var result = await RoundDrawController.GetRoundDrawTeam(TournamentId, RoundNumber);
+        if(result is null)
+        {
+            await Task.Delay(400);
+            RoundDraw = null;
+            SubPairs = [];
+            _messageForUser = new NotExistsInDatabase(_localizer["teamDrawNotGeneratedInfo"]);
+            return;
+        }
+
+        await Task.Delay(400);
+        RoundDraw = result.Value.Item1;
+        SubPairs = result.Value.Item2;
+    }
+}
+ 

@@ -1,0 +1,113 @@
+﻿@* Page which shows all teams which are managed by a logged user. *@
+
+@page "/teamsManagement"
+
+@rendermode @(new InteractiveServerRenderMode(false))
+@attribute [StreamRendering]
+
+@using ChessTournamentManager.CodeStructures
+@using ChessTournamentManager.Components.Account
+@using ChessTournamentManager.Controllers
+@using ChessTournamentManager.Data
+@using ChessTournamentManager.DataServices
+@using ChessTournamentManager.LanguageAssets.TeamManagement
+@using ChessTournamentMate.Shared
+@using Microsoft.AspNetCore.Authorization
+
+@attribute [Authorize]
+
+@using DatabaseCommunicator.Models;
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.Extensions.Localization
+@using TournamentLibrary.Participants;
+@using TournamentLibrary.TournamentHandlers;
+
+@inject UserInformation UserInformation
+
+@inject TeamManagementController TeamManagementController
+@inject NavigationUrls NavigationUrls
+@inject IStringLocalizer<TeamManagementLabels> _localizer
+
+<title>@_localizer["teamsManagementTitle"]</title>
+
+<QuestionMarkWithHelp ToolTipText="@_localizer["teamsManagementToolTip"]"></QuestionMarkWithHelp>
+
+<Spinner Visible="_loading"></Spinner>
+
+@if (!_loading)
+{
+	<UIResponseMessageDisappear Message="@_message"></UIResponseMessageDisappear>
+
+	@if (!_errorOccured)
+	{
+		@foreach (var team in ManagedTeams)
+		{
+			<div class="mt-2" @onclick="() => OnManageTeam(team.Team.Id)">
+				<TeamCard Team="team"></TeamCard>
+			</div>
+		}
+
+		<div class="showClickable mt-3" @onclick="() => NavigationUrls.ToCreateNewTeam()">
+			<Icon Size="IconSize.x2" Name="IconName.PlusSquare"></Icon>
+		</div>
+	}
+}
+
+@code {
+
+	/// <summary>
+	/// Teams which are managed by logged user
+	/// </summary>
+	public IEnumerable<TeamWithPlayers> ManagedTeams = [];
+
+	/// <summary>
+	/// Information in the UI
+	/// </summary>
+	private QuickResponseMessage? _message;
+
+	/// <summary>
+	/// Page is still loading
+	/// </summary>
+	private bool _loading = true;
+
+	private bool _errorOccured = false;
+
+	/// <summary>
+	/// Shows page where it is possible to managed selected team
+	/// </summary>
+	/// <param name="teamId">Id of the team</param>
+	private void OnManageTeam(string teamId)
+	{
+		NavigationUrls.ToTeamManagementPage(teamId);
+	}
+
+	protected override async Task OnInitializedAsync()
+	{
+		_loading = true;
+
+
+		await Task.WhenAll(HideCreateNewTeamForm(), Task.Delay(300));
+		_loading = false;
+
+		await InvokeAsync(StateHasChanged);
+	}
+
+	/// <summary>
+	/// Retreives all managed teams
+	/// </summary>
+	/// <returns></returns>
+	public async Task HideCreateNewTeamForm()
+	{
+		string accountId = (await UserInformation.GetLoggedUserIdAsync())!;
+		try
+		{
+			ManagedTeams = await TeamManagementController.GetManagedTeams(accountId);
+		}
+		catch
+		{
+			_message = new UnsuccessfulMessage(_localizer["teamsManagementCannotLoadTeams"]);
+			_errorOccured = true;
+			return;
+		}
+	}
+}

@@ -1,0 +1,68 @@
+﻿@rendermode @(new InteractiveServerRenderMode(false))
+@attribute [StreamRendering]
+
+@using ChessTournamentManager.Components.TournamentTabs.Prepositions
+@using ChessTournamentManager.Controllers
+@using ChessTournamentManager.DataServices
+@using ChessTournamentManager.LanguageAssets.TournamentForParticipants
+@using ChessTournamentMate.Shared
+@using DatabaseCommunicator.Models
+@using Microsoft.Extensions.Localization
+
+
+@inject TournamentController TournamentController
+@inject IStringLocalizer<TournamentForParticipantsLabels> _localizer
+
+<title>@_localizer["prepositionTitle"]</title>
+
+<div class="mt-3">
+	<UIResponseRender Message="_message"></UIResponseRender>
+</div>
+
+<div class="mt-3">
+	<TournamentPreposition Tournament="Tournament"></TournamentPreposition>
+</div>
+
+@code {
+
+	/// <summary>
+	/// Id of the tournament
+	/// </summary>
+	[Parameter]
+	public string TournamentId { get; set; }
+
+	/// <summary>
+	/// Information about tournament
+	/// </summary>
+	public Tournament? Tournament { get; set; }
+
+	/// <summary>
+	/// Message in the UI
+	/// </summary>
+	private QuickResponseMessage? _message;
+
+	protected override async Task OnInitializedAsync()
+	{
+		await LoadTournamentInformation();
+	}
+
+	/// <summary>
+	/// Retreives information about the tournment from database
+	/// </summary>
+	/// <returns></returns>
+	public async Task LoadTournamentInformation()
+	{
+		try
+		{
+			Tournament = await TournamentController.GetTournamentInformation(TournamentId);
+		}
+		catch
+		{
+		}
+		if (Tournament is null)
+		{
+			_message = new UnsuccessfulMessage(_localizer["prepositionTournamentCannotLoad"]);
+		}
+		await InvokeAsync(StateHasChanged);
+	}
+}

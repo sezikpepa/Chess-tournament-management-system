@@ -1,0 +1,66 @@
+﻿@using System.Security.Claims
+@using ChessTournamentManager.LanguageAssets
+@using Microsoft.Extensions.Localization
+@rendermode InteractiveServer
+
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IStringLocalizer<MainMenuLables> _localizer
+
+@* inspiration in documentation https://demos.blazorbootstrap.com/layout-setup/blazor-server *@
+
+<div class="bb-page">
+
+    <Sidebar2 @ref="sidebar"
+             IconName="IconName.Rainbow"
+             Title="TourMan"
+             DataProvider="SidebarDataProvider" />
+</div>
+
+
+@code {
+    private Sidebar2 sidebar = default!;
+    private IEnumerable<NavItem> navItems = default!;
+
+    private async Task<Sidebar2DataProviderResult> SidebarDataProvider(Sidebar2DataProviderRequest request)
+    {
+        if (navItems is null)
+            navItems = await GetNavItems();
+
+        return await Task.FromResult(request.ApplyTo(navItems));
+    }
+
+    /// <summary>
+    /// Link to the main pages.
+    /// </summary>
+    /// <returns></returns>
+    private async Task<IEnumerable<NavItem>> GetNavItems()
+    {
+        List<NavItem> navItems = new List<NavItem>
+        {
+            new NavItem { Id = "1", Href = "/", IconName = IconName.HouseDoorFill, Text = _localizer["home"], Match=NavLinkMatch.All},
+            new NavItem { Id = "2", Href = "/tournaments", IconName = IconName.Stickies, Text = _localizer["tournaments"]},
+            new NavItem { Id = "11", Href = "/players", IconName = IconName.PeopleFill, Text = _localizer["players"]},
+            new NavItem { Id = "12", Href = "/myTournaments", IconName = IconName.Clipboard, Text = _localizer["myTournaments"]},
+            new NavItem { Id = "10", IconName = IconName.ConeStriped, Text = _localizer["managing"]},
+            new NavItem { Id = "3", Href = "/createTournament", IconName = IconName.DatabaseAdd, Text = _localizer["createTournament"], ParentId="10"},
+            new NavItem { Id = "4", Href = "/manageTournaments", IconName = IconName.WrenchAdjustable, Text = _localizer["manageTournaments"], ParentId="10"},
+            new NavItem { Id = "5", Href = "/teamsManagement", IconName = IconName.WrenchAdjustable, Text = _localizer["manageTeams"], ParentId="10"},
+            new NavItem { Id = "6", Href = "/myProfile", IconName = IconName.Person, Text = _localizer["myProfile"]}
+        };
+
+        AuthenticationState authorizationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        ClaimsPrincipal user = authorizationState.User;
+
+        if (user.Identity!.IsAuthenticated)
+        {
+            navItems.Add(new NavItem { Id = "7", Href = "/Account/Manage", IconName = IconName.Table, Text = _localizer["account"] });
+        }
+        else
+        {
+            navItems.Add(new NavItem { Id = "8", Href = "/Account/Register", IconName = IconName.Table, Text = _localizer["register"] });
+            navItems.Add(new NavItem { Id = "9", Href = "/Account/Login", IconName = IconName.Table, Text = _localizer["login"] });
+        }
+
+        return navItems;
+    }
+}

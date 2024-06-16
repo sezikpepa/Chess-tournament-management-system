@@ -1,0 +1,99 @@
+﻿
+@* Page which shows matches of a player during specific tournament *@
+
+@page "/tournaments/{TournamentId}/performance/{PlayerId}"
+
+@rendermode @(new InteractiveServerRenderMode(false))
+@attribute [StreamRendering]
+
+@using ChessTournamentManager.Controllers
+@using ChessTournamentManager.LanguageAssets.TournamentManagementLabels
+@using ChessTournamentMate.Shared
+@using DatabaseCommunicator.Models
+@using Microsoft.Extensions.Localization
+@using TournamentLibrary.TournamentParts
+
+
+@inject TournamentController TournamentController
+@inject PlayerController PlayerController
+@inject IStringLocalizer<TournamentManagementLabels> _localizer
+
+<title>@_localizer["performanceTitle"]</title>
+
+@if (!_loading)
+{
+    <UIResponseRender Message="_notExistsMessage"></UIResponseRender>
+
+    <ParticipantPerformanceRender Matches="@_matches" ForPlayer="@_playerInformation"></ParticipantPerformanceRender>
+}
+
+
+@code {
+
+    /// <summary>
+    /// Id of the tournament from which the matches will be retreived
+    /// </summary>
+    [Parameter]
+    public string TournamentId { get; set; }
+
+    /// <summary>
+    /// Id of the player for which the performance will be shown
+    /// </summary>
+    [Parameter]
+    public string PlayerId { get; set; }
+
+    /// <summary>
+    /// Matches of the player in the tournament
+    /// </summary>
+    private List<RoundPair<Player>> _matches { get; set; } = [];
+
+    /// <summary>
+    /// Information about the player
+    /// </summary>
+    private Player? _playerInformation;
+
+    /// <summary>
+    /// Selected player does not exist in the database
+    /// </summary>
+    private QuickResponseMessage? _notExistsMessage;
+
+    /// <summary>
+    /// Page is still loading
+    /// </summary>
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _loading = true;
+        await GetTournamentPairs();
+        _playerInformation = await PlayerController.GetProfileInformation(PlayerId);
+        _loading = false;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    /// <summary>
+    /// Retreives matches of the player in the tournament
+    /// </summary>
+    /// <returns></returns>
+    private async Task GetTournamentPairs()
+    {
+        Tournament? tournamentInformation = await TournamentController.GetTournamentInformation(TournamentId);
+        if (tournamentInformation is null)
+        {
+            _notExistsMessage = new NotExistsInDatabase(_localizer["performaceInvalidTournament"]);
+            await InvokeAsync(StateHasChanged);
+            return;
+        }
+        List<RoundPair<Player>> allPairs;
+        if (tournamentInformation.IsTeam == false)
+        {
+            allPairs = await TournamentController.GetTournamentPairs(TournamentId);
+        }
+        else
+        {
+            allPairs = await TournamentController.GetAllPlayerPairsInTeamTournamentAsync(TournamentId);
+        }
+        _matches = allPairs.Where(x => x.White.Id == PlayerId || x.Black.Id == PlayerId).ToList();
+    }
+}
+

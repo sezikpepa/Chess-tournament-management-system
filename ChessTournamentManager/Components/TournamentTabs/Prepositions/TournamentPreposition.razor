@@ -1,0 +1,99 @@
+﻿@using ChessTournamentManager.Controllers
+@using ChessTournamentManager.DataServices
+@using ChessTournamentManager.LanguageAssets.TournamentForParticipants
+@using ChessTournamentMate.Shared
+@using DatabaseCommunicator.Models
+@using Microsoft.Extensions.Localization
+
+@inject TournamentSettingsController TournamentSettingsController
+@inject TournamentController TournamentController
+
+@inject IStringLocalizer<TournamentForParticipantsLabels> _localizer
+
+@if(Tournament is not null)
+{
+	<TournamentPrepositionPartSimpleText Key="@_localizer["prepositionTournamentName"]" Value="@Tournament.TournamentName"></TournamentPrepositionPartSimpleText>
+	<TournamentPrepositionPartSimpleText Key="@_localizer["prepositionTournamentDescription"]" Value="@Tournament.ShortDescription"></TournamentPrepositionPartSimpleText>
+	if(Tournament.StartDate == Tournament.EndDate)
+	{
+		<TournamentPrepositionPartSimpleText Key="@_localizer["prepositionDate"]" Value="@Tournament.StartDate.ToString("dd.MM.yyyy")"></TournamentPrepositionPartSimpleText>
+	}
+	else
+	{
+		<TournamentPrepositionPartSimpleText Key="@_localizer["prepositionStartDate"]" Value="@Tournament.StartDate.ToString("dd.MM.yyyy")"></TournamentPrepositionPartSimpleText>
+		<TournamentPrepositionPartSimpleText Key="@_localizer["prepositionEndDate"]" Value="@Tournament.EndDate.ToString("dd.MM.yyyy")"></TournamentPrepositionPartSimpleText>
+	}
+	<TournamentPrepositionPartSimpleText Key="@_localizer["prepositionExpectedNumberOfRounds"]" Value="@Tournament.ExpectedNumberOfRounds.ToString()"></TournamentPrepositionPartSimpleText>
+	<TournamentPrepositionPartSimpleText Key="@_localizer["prepositionDrawType"]" Value="@Tournament.TournamentType.ToString()"></TournamentPrepositionPartSimpleText>
+	<TournamentPrepositionPartSimpleText Key="@_localizer["prepositionTimeControlType"]" Value="@_timeControl.GetTournamentTimeType().ToString()"></TournamentPrepositionPartSimpleText>
+	<TournamentPrepositionPartSimpleText Key="@_localizer["prepositionTeamTournament"]" Value="@_localizer[Tournament.IsTeam.ToYesOrNo()]"></TournamentPrepositionPartSimpleText>
+	@if (Tournament.IsTeam)
+	{
+		<TournamentPrepositionPartSimpleText Key="@_localizer["prepositionTeamSize"]" Value="@_teamSize.ToString()"></TournamentPrepositionPartSimpleText>
+		<TournamentPrepositionPartSimpleText Key="@_localizer["prepositionNumberOfRegisteredTeams"]" Value="@_numberOfParticipants.ToString()"></TournamentPrepositionPartSimpleText>
+		<TournamentPrepositionPartSimpleText Key="@_localizer["prepositionMaximumNumberOfTeams"]" Value="@_registrationSettings?.MaximumNumberOfParticipants.ToString()"></TournamentPrepositionPartSimpleText>
+	}
+	else
+	{
+		<TournamentPrepositionPartSimpleText Key="@_localizer["prepositionNumberOfRegisteredPlayers"]" Value="@_numberOfParticipants.ToString()"></TournamentPrepositionPartSimpleText>
+		<TournamentPrepositionPartSimpleText Key="@_localizer["prepositionMaximumNumberOfPlayers"]" Value="@_registrationSettings?.MaximumNumberOfParticipants.ToString()"></TournamentPrepositionPartSimpleText>
+	}
+	<TournamentPrepositionPartSimpleText Key="@_localizer["prepositionRegistrationOpened"]" Value="@_registrationSettings?.RegistrationStart?.ToString("dd.MM.yyyy")" Hide="_registrationSettings?.RegistrationStart is null"></TournamentPrepositionPartSimpleText>
+	<TournamentPrepositionPartSimpleText Key="@_localizer["prepositionRegistrationClosed"]" Value="@_registrationSettings?.RegistrationEnd?.ToString("dd.MM.yyyy")" Hide="_registrationSettings?.RegistrationEnd is null"></TournamentPrepositionPartSimpleText>
+	<TournamentPrepositionTimeControl TimeControl="@_timeControl"></TournamentPrepositionTimeControl>
+	<TournamentPrepositionAddress Address="@_address"></TournamentPrepositionAddress>
+}
+
+@code {
+
+	/// <summary>
+	/// Id of the tournament
+	/// </summary>
+	[Parameter]
+	public Tournament? Tournament { get; set; }
+
+	/// <summary>
+	/// Time control of the tournament
+	/// </summary>
+	private TimeControlSettings _timeControl { get; set; } = new();
+
+	/// <summary>
+	/// Address of the tournament
+	/// </summary>
+	private Address? _address;
+
+	/// <summary>
+	/// Registration settings of the tournament
+	/// </summary>
+	private RegistrationSettings? _registrationSettings;
+
+	/// <summary>
+	/// How many participants plays in the tournament
+	/// </summary>
+	private int _numberOfParticipants;
+
+	/// <summary>
+	/// How many player play in each team
+	/// </summary>
+	private int? _teamSize;
+
+	protected override async Task OnParametersSetAsync()
+	{
+		if(Tournament is not null)
+		{
+			_timeControl = await TournamentSettingsController.GetTournamentTimeControlAsync(Tournament.Id);
+			_address = await TournamentSettingsController.GetTournamentAddress(Tournament.Id);
+			_registrationSettings = await TournamentSettingsController.GetRegistrationSettingsAsync(Tournament.Id);
+
+			if (Tournament.IsTeam)
+			{
+				_numberOfParticipants = await TournamentController.GetNumberOfRegisteredTeamsWithPlayers(Tournament.Id);
+				_teamSize = (await TournamentSettingsController.GetTournamentTeamDrawSettingsAsync(Tournament.Id)).TeamSizeForRound;
+			}
+			else
+			{
+				_numberOfParticipants = await TournamentController.GetNumberOfAllPlayersInTournament(Tournament.Id);
+			}
+		}
+	}
+}

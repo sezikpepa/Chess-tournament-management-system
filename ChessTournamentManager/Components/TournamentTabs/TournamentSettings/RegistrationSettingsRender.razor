@@ -1,0 +1,70 @@
+﻿
+@* Handles settings of registration period of the tournament. *@
+
+@using ChessTournamentManager.Controllers
+@using ChessTournamentManager.DataServices
+@using ChessTournamentManager.LanguageAssets.TournamentManagementLabels
+@using DatabaseCommunicator.Models
+@using Microsoft.Extensions.Localization
+
+@inject TournamentSettingsController TournamentSettingsController
+@inject IStringLocalizer<TournamentManagementLabels> _localizer
+
+@if (Model is not null)
+{
+    <EditForm Model="@Model" OnValidSubmit="Submit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="row">
+            <div class="col-12 col-xl-6">
+                <label class="form-label">@_localizer["settingsTabRegistrationRegistrationFrom"]</label>
+                <DateInput EnableMinMax=true Min="DateTime.Now.Date" Max="Model.RegistrationEnd is not null ? Model.RegistrationEnd?.AddDays(-1) : DateTime.MaxValue" class="form-control" @bind-Value="Model.RegistrationStart"></DateInput>
+            </div>
+            <div class="col-12 col-xl-6">
+                <label class="form-label">@_localizer["settingsTabRegistrationRegistrationTo"]</label>
+                <DateInput EnableMinMax=true Min="@(DateTime.Now.AddDays(1).Date <= Model.RegistrationStart?.AddDays(1).Date ? Model.RegistrationStart?.AddDays(1).Date : DateTime.Now.AddDays(1).Date)" Max="DateTime.MaxValue" class="form-control" @bind-Value="Model.RegistrationEnd"></DateInput>
+            </div>
+            <div class="col-12 col-xl-6">
+                <label class="form-label">@_localizer["settingsTabRegistrationMaximumNumberOfParticipants"]</label>
+                <NumberInput class="form-control" @bind-Value="Model.MaximumNumberOfParticipants"></NumberInput>
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-2">
+                <Button Color="ButtonColor.Success" Type="ButtonType.Submit">@_localizer["settingsTabRegistrationSaveButton"]</Button>
+            </div>
+        </div>
+
+    </EditForm>
+}
+
+@code {
+
+    /// <summary>
+    /// Values about registration - from form
+    /// </summary>
+    [SupplyParameterFromForm]
+    public RegistrationSettings? Model { get; set; }
+
+    /// <summary>
+    /// Id of the tournament
+    /// </summary>
+    [Parameter]
+    public string TournamentId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Model = await TournamentSettingsController.GetRegistrationSettingsAsync(TournamentId);
+    }
+
+    /// <summary>
+    /// Saves information in the tournament
+    /// </summary>
+    /// <returns></returns>
+    public async Task Submit()
+    {
+        await TournamentSettingsController.SaveRegistrationSettingsAsync(TournamentId, Model);
+    }
+}

@@ -1,0 +1,17 @@
+﻿
+@* Default page. First page which is shown to the user when the application is started. Welcomes the user. *@
+
+@page "/"
+@using ChessTournamentManager.LanguageAssets
+@using Microsoft.Extensions.Localization
+
+
+@inject IStringLocalizer<MainMenuLables> _localizer
+
+<title>TourMan</title>
+
+
+<h1>@_localizer["welcome"]</h1>
+
+@rendermode @(new InteractiveServerRenderMode(false))
+

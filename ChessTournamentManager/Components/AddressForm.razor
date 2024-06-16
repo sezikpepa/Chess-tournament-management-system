@@ -1,0 +1,98 @@
+﻿
+@* Form containing elements for address settings. *@
+
+@using Blazor.Flags
+@using ChessTournamentManager.LanguageAssets.TournamentManagementLabels
+@using DatabaseCommunicator.Models
+@using ChessTournamentManager.CodeStructures
+@using Microsoft.Extensions.Localization
+
+@inject IStringLocalizer<TournamentManagementLabels> _localizer
+@rendermode InteractiveServer
+
+<EditForm Model="Model" OnValidSubmit="Submit">
+	<ValidationSummary />
+	<DataAnnotationsValidator />
+	<div class="row">
+		<div class="col-6">
+			<label class="form-label">@_localizer["settingsTabAddressStreet"]</label>
+			<InputText class="form-control" @bind-Value="Model.Street"></InputText>
+		</div>
+		<div class="col-2">
+			<label class="form-label">@_localizer["settingsTabAddressHouseNumber"]</label>
+			<InputText class="form-control" @bind-Value="Model.HouseNumber"></InputText>
+		</div>
+	</div>
+
+	<div class="row">
+		<div class="col-6">
+			<label class="form-label">@_localizer["settingsTabAddressCity"]</label>
+			<InputText class="form-control" @bind-Value="Model.City"></InputText>
+		</div>
+		<div class="col-2">
+			<label class="form-label">@_localizer["settingsTabAddressZip"]</label>
+			<InputText class="form-control" @bind-Value="Model.Zip"></InputText>
+		</div>
+	</div>
+
+	<div class="row">
+		<div class="col-6">
+			<label class="form-label">@_localizer["settingsTabAddressCountry"]</label>
+			<InputSelect class="form-select" TValue="string" @bind-Value="Model.Country">
+				<option></option>
+				@foreach (Country country in CountriesMethods.AvailableCountries)
+				{
+					<option value="@country.Name()">@_localizer[country.Name()]</option>
+				}
+			</InputSelect>
+		</div>
+	</div>
+
+	<div class="mt-3">
+		<Button Color="ButtonColor.Success" Type="ButtonType.Submit">@_localizer["settingsTabAddressSaveButton"]</Button>
+	</div>
+
+
+</EditForm>
+
+
+
+
+
+
+@code {
+
+	/// <summary>
+	/// Default values of the address. If the address was selected in the past, this values are shown in the form and it is possible to edit them.
+	/// </summary>
+	[Parameter]
+	public Address? AddressDefaultValue { get; set; }
+
+	[SupplyParameterFromForm]
+	public Address Model { get; set; } = new();
+
+	/// <summary>
+	/// Method which will process result of the form after submit button.
+	/// </summary>
+	[Parameter]
+	public EventCallback<Address> AddressSubmited { get; set; }
+
+
+	protected override async Task OnParametersSetAsync()
+	{
+		if(AddressDefaultValue is not null)
+		{
+			Model = AddressDefaultValue;
+		}
+		await InvokeAsync(StateHasChanged);
+	}
+
+	/// <summary>
+	/// Handles result of the form - submit button action.
+	/// </summary>
+	/// <returns></returns>
+	public async Task Submit()
+	{
+		await AddressSubmited.InvokeAsync(Model);
+	}
+}

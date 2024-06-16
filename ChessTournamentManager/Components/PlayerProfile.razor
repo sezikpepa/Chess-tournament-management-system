@@ -1,0 +1,124 @@
+﻿
+@* Shows profile of each player in the database. *@
+
+@rendermode @(new InteractiveServerRenderMode(false))
+
+@attribute [StreamRendering]
+
+@using Blazor.Flags
+@using ChessTournamentManager.CodeStructures
+@using ChessTournamentManager.Components.Account
+@using ChessTournamentManager.Data
+@using ChessTournamentManager.LanguageAssets.Profiles
+@using Microsoft.AspNetCore.Authorization
+
+@using DatabaseCommunicator.Models;
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.Extensions.Localization
+@using TournamentLibrary.Participants;
+@using TournamentLibrary.TournamentHandlers;
+
+@using Microsoft.AspNetCore.SignalR.Client
+@inject NavigationManager Navigation
+@inject NavigationUrls NavigationUrls
+
+@inject IStringLocalizer<ProfilesLabels> _localizer
+
+<link href="_content/Blazor.Flags/flags.css" rel="stylesheet" />
+
+<div class="row">
+    <div class="col-xl-12 float-start">
+        @if(Player?.Country is not null)
+        {
+            <div class="float-start">
+                @{
+                    Country? countryOfOrigin = CountriesMethods.AvailableCountries.Where(x => x.Name() == Player?.Country).FirstOrDefault();
+                }
+                @if (countryOfOrigin is not null)
+                {
+                    <CountryFlag InputType="InputType.ISOA2" ISOA2="@countryOfOrigin.ToString()" Size="FlagSize.Large"></CountryFlag>
+                }
+            </div>
+        }
+
+        <div class="float-start ms-3">
+            <h1>@Player?.DisplayName</h1>
+        </div>
+    </div>
+
+</div>
+
+<div class="row">
+
+    <div class="col-md-6 col-xl-3 float-start">
+        @* default picture downloaded from https://pixabay.com/vectors/avatar-icon-placeholder-facebook-1577909/ *@
+        
+        @if(Player.ProfilePictureName is not null)
+        {
+            @* GUID in image url is to disable caching *@
+            <img class="img-fluid" width="400" height="400" src="ProfilePictures/@(Player.ProfilePictureName)?id=@(Guid.NewGuid().ToString())" />
+        }
+        else
+        {
+            <img class="img-fluid" width="400" height="330" src="/ProfilePictures/defaultPlayerPicture.svg" />
+        }
+    </div>
+
+
+    <div class="col-md-6 col-xl-9 float-start">
+        <dl class="row">
+
+            <dt class="col-3">@_localizer["profileClub"]</dt>
+            <dd class="col-9">@Player.ChessClub</dd>
+
+            <dt class="col-3">@_localizer["profileFideId"]</dt>
+            <dd class="col-9">@Player.FideId</dd>
+
+            <dt class="col-3">@_localizer["profileDateOfBirth"]</dt>
+            <dd class="col-9">@Player.DateOfBirth?.ToString("dd.MM.yyyy")</dd>
+
+            <dt class="col-3">@_localizer["profileElo"]</dt>
+            <dd class="col-9">@Player?.Elo</dd>
+
+            <dt class="col-3">@_localizer["profileCountry"]</dt>
+            <dd class="col-9">@_localizer[Player?.Country ?? ""]</dd>
+
+        </dl>
+
+    </div>
+
+</div>
+
+@if(Tournaments.Count() > 0)
+{
+    <div class="row mt-3">
+        <TournamentCardSlideShow ShowTournamentInformation="true"
+                                 TournamentInformationCallBack="(tournamentId) => NavigationUrls.ToTournamentPageForPlayer(tournamentId)"
+                                 Tournaments="@Tournaments.ToList()">
+        </TournamentCardSlideShow>
+    </div>
+}
+else
+{
+    <div class="mt-5">
+
+    </div>
+    <UIResponseRender Message="@(new NotExistsInDatabase(_localizer["noTournaments"]))"></UIResponseRender>
+}
+
+
+
+@code {
+
+    /// <summary>
+    /// Player information which should be shown.
+    /// </summary>
+    [Parameter]
+    public Player Player { get; set; } = new();
+
+    /// <summary>
+    /// Tournaments where the player played/plays/will be play
+    /// </summary>
+    [Parameter]
+    public IEnumerable<Tournament> Tournaments { get; set; } = [];
+}

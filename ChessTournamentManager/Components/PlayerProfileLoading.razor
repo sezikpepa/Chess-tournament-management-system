@@ -1,0 +1,123 @@
+﻿@* 
+Loads information required for player profile and shows them. *@
+
+@rendermode @(new InteractiveServerRenderMode(false))
+
+@attribute [StreamRendering]
+
+@using ChessTournamentManager.CodeStructures
+@using ChessTournamentManager.Controllers
+@using ChessTournamentManager.Data
+@using ChessTournamentManager.DataServices
+@using ChessTournamentManager.LanguageAssets.Profiles
+@using ChessTournamentMate.Shared;
+@using DatabaseCommunicator.Models;
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.Extensions.Localization
+@using TournamentLibrary.Participants;
+@using TournamentLibrary.TournamentParts;
+
+@using Microsoft.AspNetCore.SignalR.Client
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthenticationProvider
+@inject UserManager<ApplicationUser> UserManager
+@inject PlayerController PlayerController
+
+@inject IStringLocalizer<ProfilesLabels> _localizer
+
+
+@if (!_loading)
+{
+	@if (_message is not null)
+	{
+		<UIResponseRender Message="_message"></UIResponseRender>
+	}
+	@if (Player is not null)
+	{
+		<div class="row mt-3">
+			<PlayerProfile Player="@Player" Tournaments="PlayersTournaments"></PlayerProfile>
+		</div>
+	}
+}
+
+<BasicSpinner Visible="_loading"></BasicSpinner>
+
+@code {
+
+	/// <summary>
+	/// Id of the player
+	/// </summary>
+	[Parameter]
+	public string? PlayerId { get; set; }
+
+	/// <summary>
+	/// Information about player
+	/// </summary>
+	public Player? Player { get; set; }
+
+	/// <summary>
+	/// Message in the UI
+	/// </summary>
+	private QuickResponseMessage? _message;
+
+	/// <summary>
+	/// All tournaments where the players is registered
+	/// </summary>
+	public IEnumerable<Tournament> PlayersTournaments { get; set; } = [];
+
+	/// <summary>
+	/// Page is still loading
+	/// </summary>
+	private bool _loading = true;
+
+	protected override async Task OnParametersSetAsync()
+	{
+		_loading = true;
+		await InvokeAsync(StateHasChanged);
+		await Task.WhenAll(LoadProfile(), LoadTournaments(), Task.Delay(300));
+		_loading = false;
+	}
+
+	/// <summary>
+	/// Retreives information about profile from database
+	/// </summary>
+	/// <returns></returns>
+	public async Task LoadProfile()
+	{
+		if (PlayerId is null)
+		{
+			return;
+		}
+
+		try
+		{
+			Player = await PlayerController.GetProfileInformation(PlayerId);
+		}
+		catch
+		{
+			Player = null;
+			_message = new UnsuccessfulMessage(_localizer["profileCannotLoad"]);
+			await InvokeAsync(StateHasChanged);
+			return;
+		}
+
+		if (Player is null)
+		{
+			_message = new NotExistsInDatabase(_localizer["profileNotExistsInDatabase"]);
+		}
+	}
+
+	/// <summary>
+	/// Loads tournaments where the player is registered
+	/// </summary>
+	/// <returns></returns>
+	public async Task LoadTournaments()
+	{
+		if(PlayerId is null)
+		{
+			PlayersTournaments = [];
+			return;
+		}
+		PlayersTournaments = await PlayerController.GetPlayersTournaments(PlayerId);
+	}
+}

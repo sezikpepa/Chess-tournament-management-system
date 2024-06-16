@@ -1,0 +1,76 @@
+﻿
+@* Playoff bracket - spot for one participant of the tournament in every round.*@
+
+@using TournamentLibrary.Participants
+@typeparam TParticipant where TParticipant : IParticipant
+
+
+<div style="width: @(Width)px; height: @(Height)px; background-color: @(ForBlack ? "#331800" : "beige"); position: absolute; left: @(X)px; top: @(Y)px; border: @(LineWidth)px solid black;"></div>
+
+<Line xStart="X + Width - BoxPadding" xEnd="X + Width - BoxPadding" yStart="Y" yEnd="Y + Height" LineWidth="LineWidth"></Line>
+
+<p style="position: absolute; @(ForBlack ? "color: beige;" : "") left: @(X + Width/40)px; top: @(Y - Height/10)px;">@Participant?.DisplayName</p>
+
+@if(Points is not null && Participant is not null)
+{
+	<p style="position: absolute; @(ForBlack ? "color: beige;" : "") left: @(X + Width - BoxPadding + 5)px; top: @(Y - Height/10)px;">@Points.Value.ToString("0.#")</p>
+}
+
+
+
+@code {
+
+	/// <summary>
+	/// Information about participant of the tournament.
+	/// </summary>
+	[Parameter]
+	public TParticipant? Participant { get; set; }
+
+	/// <summary>
+	/// How many points participant received in specific match.
+	/// </summary>
+	[Parameter]
+	public decimal? Points { get; set; }
+
+	/// <summary>
+	/// Width of the spot in pixels.
+	/// </summary>
+	[Parameter]
+	public int Width { get; set; } 
+
+	/// <summary>
+	/// Height of the spot in pixels.
+	/// </summary>
+	[Parameter]
+	public int Height { get; set; }
+
+	/// <summary>
+	/// X coordiate of the left top corner.
+	/// </summary>
+	[Parameter]
+	public int X { get; set; } 
+
+	/// <summary>
+	/// Y coordiate of the left top corner.
+	/// </summary>
+	[Parameter]
+	public int Y { get; set; } 
+
+	/// <summary>
+	/// Stroke width of each line.
+	/// </summary>
+	[Parameter]
+	public int LineWidth { get; set; }
+
+	/// <summary>
+	/// Width of the box where the result of the match is shown.
+	/// </summary>
+	[Parameter]
+	public int BoxPadding { get; set; } = 35;
+
+	/// <summary>
+	/// True - participant played as black in the match. False - participant played as white in the match. Based on this information it shows proper color in the background.
+	/// </summary>
+	[Parameter]
+	public bool ForBlack { get; set; } = false;
+}

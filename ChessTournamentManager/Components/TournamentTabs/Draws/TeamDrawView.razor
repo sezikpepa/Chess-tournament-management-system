@@ -1,0 +1,217 @@
+﻿@* Shows round draw of the tournament for teams *@
+
+@using ChessTournamentManager.LanguageAssets.TournamentManagementLabels
+@using DatabaseCommunicator.Models
+@using Microsoft.Extensions.Localization
+@using TournamentLibrary
+@using TournamentLibrary.Participants
+@using TournamentLibrary.TournamentParts
+
+@inject IStringLocalizer<TournamentManagementLabels> _localizer
+
+<div>
+    <div @onclick="TogglePlayers" class="showClickable">
+        <Card>
+            <CardBody>
+                <CardTitle>
+                    <div class="spaceForResultAndTeamNames">
+                        <div class="col-5 alignTextLeft">
+                            @RoundPair.White?.Name
+                        </div>
+                        <div class="col-2 alignTextCenter">
+                            @TeamScoreSum.ToShortString()
+                        </div>
+                        <div class="col-5 alignTextRight">
+                            @RoundPair.Black?.Name
+                        </div>
+                    </div>
+                </CardTitle>
+            </CardBody>
+        </Card>
+    </div>
+
+    <div class="col-12">
+        <Collapse @ref="teamPlayers" Class="mb-3">
+            @if (_showTieBreak)
+            {
+                <div>@_localizer["teamDrawTieBreakWinner"]</div>
+                <select class="form-select" value=@GetValueForSelectTieBreak() @onchange="(value) => SetTieBreak(value)">
+                    <option value="Not selected"></option>
+                    <option value="White">@_localizer["teamDrawTieBreakWhite"]</option>
+                    <option value="Black">@_localizer["teamDrawTieBreakBlack"]</option>
+                </select>
+            }
+            <PlayerMatchesDrawView PlayersWithPoints="PlayersWithPoints" @ref="_playerMatchesDrawView" MatchCanEndWithDraw="true" RoundPairs="SubMatches" ShowTieBreakCallBack="UpdateTieBreak" SaveMatchResultsCallBack="SaveMatchResults" ResultChanged="UpdateTeamSumAndNextRoundButton"></PlayerMatchesDrawView>
+        </Collapse>
+    </div>
+</div>
+
+@code {
+
+    /// <summary>
+    /// Match between two teams
+    /// </summary>
+    [Parameter]
+    public RoundPair<Team> RoundPair { get; set; } = new();
+
+    /// <summary>
+    /// Matches between single players which will be held in the match between two teams
+    /// </summary>
+    [Parameter]
+    public List<RoundPair<Player>> SubMatches { get; set; } = new();
+
+    /// <summary>
+    /// Method which should handle saving of results of matches
+    /// </summary>
+    [Parameter]
+    public EventCallback<(RoundPair<Team>, List<RoundPair<Player>>)> SaveMatchResultsCallBack { get; set; }
+
+    [Parameter]
+    public EventCallback ResultOrTieBreakChanged { get; set; }
+
+    /// <summary>
+    /// Draw is a valid result in the main match
+    /// </summary>
+    [CascadingParameter(Name = "IsDrawPossible")]
+    public bool MatchCanEndWithDraw { get; set; } = true;
+
+    /// <summary>
+    /// Participants of the tournament with points they have already obtained
+    /// </summary>
+    [Parameter]
+    public IEnumerable<ParticipantWithPoints<Player>> PlayersWithPoints { get; set; } = [];
+
+    /// <summary>
+    /// Result of the match between teams
+    /// </summary>
+    public SingleMatchResult TeamScoreSum { get; set; } = new();
+
+    /// <summary>
+    /// If the result is draw, tiebreak should be shown, true - tiebreak will be shown
+    /// </summary>
+    private bool _showTieBreak = false;
+
+    private PlayerMatchesDrawView _playerMatchesDrawView = default!;
+
+    Collapse teamPlayers = default!;
+
+    /// <summary>
+    /// Sets default value in the tiebreak
+    /// </summary>
+    /// <returns></returns>
+    private string GetValueForSelectTieBreak()
+    {
+        if (RoundPair.TieBreakWinnerWhite is null)
+        {
+            return "Not selected";
+        }
+        if (RoundPair.TieBreakWinnerWhite.Value)
+        {
+            return "White";
+        }
+
+        return "Black";
+    }
+
+    /// <summary>
+    /// Sets tiebreak selection from the user to the match result.
+    /// </summary>
+    /// <param name="inputValue"></param>
+    /// <returns></returns>
+    public async Task SetTieBreak(ChangeEventArgs inputValue)
+    {
+        _playerMatchesDrawView.ShowSaveButton();
+        string? value = inputValue.Value?.ToString();
+        if(value == "White")
+        {
+            RoundPair.TieBreakWinnerWhite = true;
+        }
+        else if(value == "Black")
+        {
+            RoundPair.TieBreakWinnerWhite = false;
+        }
+        else
+        {
+            RoundPair.TieBreakWinnerWhite = null;
+        }
+        await UpdateTeamSumAndNextRoundButton();
+    }
+
+    /// <summary>
+    /// After every result selection of the player match, this function will show tiebreak, if all matches have been set and the whole result is a draw
+    /// </summary>
+    /// <returns></returns>
+    public async Task UpdateTieBreak()
+    {
+        _showTieBreak = false;
+        if (SubMatches.Where(x => x.Result.NotYetSet == true).Any())
+        {         
+            return;
+        }
+
+        if(MatchCanEndWithDraw == false && TeamScoreSum.IsScoreEqual)
+        {
+            _showTieBreak = true;
+            await InvokeAsync(StateHasChanged);
+            return;
+        }
+    }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await UpdateTeamSum();
+        await UpdateTieBreak();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await UpdateTeamSum();
+        await UpdateTieBreak();
+    }
+
+    /// <summary>
+    /// Shows/hides player of the team in the UI
+    /// </summary>
+    /// <returns></returns>
+    private async Task TogglePlayers() => await teamPlayers.ToggleAsync();
+
+    /// <summary>
+    /// Saves the results of the matches between players in the database
+    /// </summary>
+    /// <param name="changedResults"></param>
+    public void SaveMatchResults(List<RoundPair<Player>> changedResults)
+    {
+        RoundPair.Result = TeamScoreSum;
+        SaveMatchResultsCallBack.InvokeAsync((RoundPair, changedResults));
+    }
+
+    /// <summary>
+    /// Shows correct value of the team result, based on matches between individual players
+    /// </summary>
+    /// <returns></returns>
+    public async Task UpdateTeamSum()
+    {
+        decimal team1Score = 0;
+        decimal team2Score = 0;
+
+        foreach (var pair in SubMatches)
+        {
+            team1Score += pair.WhiteScore;
+            team2Score += pair.BlackScore;
+        }
+
+        TeamScoreSum = new(team1Score, team2Score);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    /// <summary>
+    /// Updates team result and disable/enable next round button
+    /// </summary>
+    /// <returns></returns>
+    private async Task UpdateTeamSumAndNextRoundButton()
+    {
+        await UpdateTeamSum();
+        await ResultOrTieBreakChanged.InvokeAsync();
+    }
+}

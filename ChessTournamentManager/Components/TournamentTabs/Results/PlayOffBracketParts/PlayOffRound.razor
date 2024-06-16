@@ -1,0 +1,85 @@
+﻿
+@* Playoff bracket - shows all matches in one round. *@
+
+
+@typeparam TParticipant where TParticipant : class, IParticipant
+
+
+@using TournamentLibrary.Participants
+@using TournamentLibrary.TournamentParts
+
+
+
+@for (int i = 0; i < Math.Ceiling((decimal)(ForHowManyPlayers / 2)); i++)
+{
+    @if(RoundPairs.Count() <= i)
+    {
+        <PairElement RoundPair="new RoundPair<TParticipant>()" X="XStart" Y="PairSpace * (i * 2 + 1)" Width="RoundWidth" Height="Height" WinnerLineLength="100" LineWidth="LineWidth"></PairElement>
+    }
+    else
+    {
+        <PairElement RoundPair="RoundPairs[i]" X="XStart" Y="PairSpace * (i * 2 + 1)" Width="RoundWidth" Height="Height" WinnerLineLength="100" LineWidth="LineWidth"></PairElement>
+    }
+    
+    if (i % 2 == 0 && ForHowManyPlayers >= 4)
+    {
+        <MergingLine Pair1x="XStart + RoundWidth" Pair1y="PairSpace * (i * 2 + 1) + Height/2" Pair2x="XStart + RoundWidth" Pair2y="PairSpace * (i * 2 + 3) + Height/2" OutLineLength="OutLineLength" LineWidth="LineWidth"></MergingLine>
+    }
+}
+
+
+
+
+
+
+@code {
+
+    /// <summary>
+    /// All matches in the round
+    /// </summary>
+    [Parameter]
+    public List<RoundPair<TParticipant>> RoundPairs { get; set; } = [];
+
+    /// <summary>
+    /// X coordinate of the top left corner of the round
+    /// </summary>
+    [Parameter]
+    public int XStart { get; set; } 
+
+    /// <summary>
+    /// Height of the round in pixels
+    /// </summary>
+    [Parameter]
+    public int Height { get; set; } 
+
+    /// <summary>
+    /// Distance between pairs in one round - vertical in pixels
+    /// </summary>
+    [Parameter]
+    public int PairSpace { get; set; } 
+
+    /// <summary>
+    /// Width of the round - in pixels
+    /// </summary>
+    [Parameter]
+    public int RoundWidth { get; set; } 
+
+    /// <summary>
+    /// Space between two rounds
+    /// </summary>
+    [Parameter]
+    public int OutLineLength { get; set; }
+
+    /// <summary>
+    /// Width in pixels of all lines which will be drawn
+    /// </summary>
+    [Parameter]
+    public int LineWidth { get; set; } 
+
+    /// <summary>
+    /// How many players have a match in this round
+    /// </summary>
+    [Parameter]
+    public int ForHowManyPlayers { get; set; }
+
+}

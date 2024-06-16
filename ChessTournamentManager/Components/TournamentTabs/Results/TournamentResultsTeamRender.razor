@@ -1,0 +1,77 @@
+﻿
+@* Retreives results from the database and shows them as representation by row for each team (Team tournament) *@
+
+@using ChessTournamentManager.Controllers
+@using ChessTournamentManager.DataServices
+@using ChessTournamentMate.Shared
+@using ChessTournamentMate.Shared.AvailableValues
+@using TournamentLibrary
+@using DatabaseCommunicator.Models
+
+@rendermode @(new InteractiveServerRenderMode(false))
+
+@inject TournamentStandingsController TournamentStandingsController
+@inject TournamentController TournamentController
+@inject TournamentSettingsController TournamentSettingsController
+
+<CurrentStandingsRenderView PlayersWithPoints="@Standings" AuxiliaryPoints="_auxiliaryPoints"></CurrentStandingsRenderView>
+
+
+@code {
+
+    /// <summary>
+    /// Id of the tournament
+    /// </summary>
+    [Parameter]
+    public string TournamentId { get; set; }
+
+    /// <summary>
+    /// Number of round from the start of the tournament
+    /// </summary>
+    [Parameter]
+    public int RoundNumber { get; set; }
+
+    /// <summary>
+    /// Standings of the team in the tournament
+    /// </summary>
+    public List<ParticipantWithPoints<Team>> Standings = [];
+
+    /// <summary>
+    /// Order of auxiliary points - how the current standings should be made
+    /// </summary>
+    private List<string> _auxiliaryPoints = [];
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        var tournamentInformation = await TournamentController.GetTournamentInformation(TournamentId);
+
+        _auxiliaryPoints = [];
+        if (tournamentInformation?.TournamentType == TournamentTypes.Swiss)
+        {
+            _auxiliaryPoints = (await TournamentSettingsController.GetSwissSettings(TournamentId)).AuxiliaryPoints;
+        }
+
+        await GetCurrentStandings();
+    }
+
+    /// <summary>
+    /// Retreives standings of teams in the tournament
+    /// </summary>
+    /// <returns></returns>
+    public async Task GetCurrentStandings()
+    {
+        var tmp = await TournamentStandingsController.GetCurrentStandingsTeam(TournamentId, RoundNumber);
+
+        var query = tmp.OrderByDescending(x => x.Score);
+
+        foreach (var auxiliaryPoint in _auxiliaryPoints)
+        {
+            query = query.ThenByDescending(x => new ReflectionCustomMethods().GetPropertyValue<decimal>(x, auxiliaryPoint));
+        }
+
+        Standings = query.ToList();
+
+        await InvokeAsync(StateHasChanged);
+    }
+}

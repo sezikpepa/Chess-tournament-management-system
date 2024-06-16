@@ -1,0 +1,50 @@
+﻿
+
+@* Connects pairs from the same round and merges them to one line in playoff bracket *@
+
+<Line xStart="Pair1x" xEnd="Pair1x + OutLineLength" yStart="Pair1y" yEnd="Pair1y" LineWidth="LineWidth"></Line>
+<Line xStart="Pair2x" xEnd="Pair2x + OutLineLength" yStart="Pair2y" yEnd="Pair2y" LineWidth="LineWidth"></Line>
+
+<Line xStart="Pair1x + OutLineLength" xEnd="Pair1x + OutLineLength" yStart="Pair1y" yEnd="Pair2y" LineWidth="LineWidth"></Line>
+
+<Line xStart="Pair1x + OutLineLength" xEnd="Pair1x + OutLineLength * 2" yStart="(Pair1y + Pair2y) / 2" yEnd="(Pair1y + Pair2y) / 2" LineWidth="LineWidth"></Line>
+
+
+@code {
+
+	/// <summary>
+	/// Top left corner of the first pair - X coordinate
+	/// </summary>
+	[Parameter]
+	public int Pair1x { get; set; } = 50;
+
+	/// <summary>
+	/// Top left corner of the first pair - Y coordinate
+	/// </summary>
+	[Parameter]
+	public int Pair1y { get; set; } = 50;
+
+	/// <summary>
+	/// Top left corner of the second pair - X coordinate
+	/// </summary>
+	[Parameter]
+	public int Pair2x { get; set; } = 150;
+
+	/// <summary>
+	/// Top left corner of the second pair - Y coordinate
+	/// </summary>
+	[Parameter]
+	public int Pair2y { get; set; } = 150;
+
+	/// <summary>
+	/// Space between pair from the next round
+	/// </summary>
+	[Parameter]
+	public int OutLineLength { get; set; } = 100;
+
+	/// <summary>
+	/// Width in pixels of all lines which will be drawn
+	/// </summary>
+	[Parameter]
+	public int LineWidth { get; set; } = 1;
+}

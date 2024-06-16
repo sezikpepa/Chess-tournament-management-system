@@ -1,0 +1,183 @@
+﻿
+@* Shows pairing of players in the tournament *@
+
+@using ChessTournamentManager.LanguageAssets.TournamentManagementLabels
+@using DatabaseCommunicator.Models
+@using Microsoft.Extensions.Localization
+@using TournamentLibrary
+@using TournamentLibrary.Participants
+@using TournamentLibrary.TournamentParts
+
+@rendermode @(new InteractiveServerRenderMode(false))
+
+@inject IStringLocalizer<TournamentManagementLabels> _localizer
+
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th class="col-4 alignTextLeft">@_localizer["singlePlayerDrawWhite"]</th>
+                <th class="col-1 alignTextCenter"></th>
+                <th class="col-2 alignTextCenter"></th>
+                <th class="col-1 alignTextCenter"></th>
+                <th class="col-4 alignTextRight">@_localizer["singlePlayerDrawBlack"]</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (RoundPairs is not null)
+            {
+                @foreach (RoundPair<Player> pair in RoundPairs)
+                {
+                    <tr>
+                        <th class="col-4 alignTextLeft">@pair.White?.DisplayName</th>
+                        <th class="col-1 alignTextCenter">@(PlayersWithPoints.Where(x => x.Participant.Id == pair.White?.Id).FirstOrDefault()?.Score.ToString("0.#####"))</th>
+                        <th class="col-2">
+                            <div align="center">
+                                <div class="result-col">
+                                    <div class="col-7">
+                                        @{
+                                            bool isDisabled = pair.White is null || pair.Black is null || DisableEditing || DisableEditingForPreviousRounds;
+                                        }
+                                        <select style="margin: 0 auto;" disabled="@isDisabled" class="form-select" value=@pair.Result.ToString() @onchange="async (value) => await MatchResultChosen(value, pair)">
+                                            <option value="Unknown result"></option>
+                                            <option value="1:0">1 : 0</option>
+                                            <option value="0:1">0 : 1</option>
+                                            @if (MatchCanEndWithDraw)
+                                            {
+                                                <option value="0.5:0.5">0.5 : 0.5</option>
+                                            }
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+
+                        </th>
+                        <th class="col-1 alignTextCenter">@(PlayersWithPoints.Where(x => x.Participant.Id == pair.Black?.Id).FirstOrDefault()?.Score.ToString("0.#####"))</th>
+                        <th class="col-4 alignTextRight">@pair.Black?.DisplayName</th>
+                    </tr>
+                }
+
+            }
+
+
+        </tbody>
+    </table>
+</div>
+
+
+@if (!DisableEditing && (changedMatchResults.Count != 0 || _forceShowSaveButton) && !DisableEditingForPreviousRounds)
+{
+    <Button Color="ButtonColor.Success" @onclick="SaveMatchResults">@_localizer["singlePlayerDrawSaveMatchResultsButton"]</Button>
+}
+
+
+@code{
+
+    /// <summary>
+    /// All matches which will be shown 
+    /// </summary>
+    [Parameter]
+    public List<RoundPair<Player>> RoundPairs { get; set; } = [];
+
+    /// <summary>
+    /// All players of the tournament with points they have already obtained in the tournament
+    /// </summary>
+    [Parameter]
+    public IEnumerable<ParticipantWithPoints<Player>> PlayersWithPoints { get; set; } = [];
+
+    /// <summary>
+    /// Method which should save match results
+    /// </summary>
+    [Parameter]
+    public EventCallback<List<RoundPair<Player>>> SaveMatchResultsCallBack { get; set; }
+
+    /// <summary>
+    /// Method which will be triggered if a single match result has changed
+    /// </summary>
+    [Parameter]
+    public EventCallback ResultChanged { get; set; }
+
+    /// <summary>
+    /// Method which should handle potentional tiebreak visibility
+    /// </summary>
+    [Parameter]
+    public EventCallback ShowTieBreakCallBack { get; set; }
+
+    /// <summary>
+    /// True - draw is a valid match result
+    /// </summary>
+    [Parameter]
+    public bool MatchCanEndWithDraw { get; set; } = true;
+
+    /// <summary>
+    /// User cannot edit match results
+    /// </summary>
+    [CascadingParameter(Name = "DisableEditing")]
+    public bool DisableEditing { get; set; } = false;
+
+    /// <summary>
+    /// User cannot edit match results from previous rounds
+    /// </summary>
+    [CascadingParameter(Name = "DisableEditingForPreviousRounds")]
+    public bool DisableEditingForPreviousRounds { get; set; } = false;
+
+    private bool _forceShowSaveButton { get; set; } = false;
+
+    public void ShowSaveButton()
+    {
+        _forceShowSaveButton = true;
+    }
+
+    public List<RoundPair<Player>> changedMatchResults = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        await InvokeAsync(StateHasChanged);
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await InvokeAsync(StateHasChanged);
+    }
+
+    /// <summary>
+    /// Sets the results set from the user
+    /// </summary>
+    /// <param name="matchResult"></param>
+    /// <param name="pair"></param>
+    /// <returns></returns>
+    public async Task MatchResultChosen(ChangeEventArgs matchResult, RoundPair<Player> pair)
+    {
+        SingleMatchResult result = new SingleMatchResult(matchResult.Value.ToString());
+
+        changedMatchResults.RemoveAll(x => x == pair);
+
+        pair.Result = result;
+        changedMatchResults.Add(pair);
+
+        await ResultWasChanged();
+        await ShowTieBreakCallBack.InvokeAsync();
+    }
+
+    /// <summary>
+    /// Saves the results of the matches
+    /// </summary>
+    /// <returns></returns>
+    public async Task SaveMatchResults()
+    {
+        _forceShowSaveButton = false;
+        await SaveMatchResultsCallBack.InvokeAsync(changedMatchResults);
+        changedMatchResults = [];
+    }
+
+    /// <summary>
+    /// Update nextRound button visibility
+    /// </summary>
+    /// <returns></returns>
+    public async Task ResultWasChanged()
+    {
+        await ResultChanged.InvokeAsync();    
+    }
+
+}

@@ -1,0 +1,94 @@
+﻿
+@* Page where it is possible to cancel registration of the team from the tournament. *@
+
+@page "/tournament/{TournamentId}/unregisterTeam/{TeamId}"
+
+@rendermode @(new InteractiveServerRenderMode(false))
+@attribute [StreamRendering]
+
+@using ChessTournamentManager.CodeStructures
+@using ChessTournamentManager.Controllers
+@using ChessTournamentManager.LanguageAssets.TournamentRegistration
+@using ChessTournamentMate.Shared
+@using ChessTournamentMate.Shared.QuickResponseMessages
+@using DatabaseCommunicator.ModelsManipulators
+@using Microsoft.Extensions.Localization
+
+@attribute [Authorize]
+
+
+@inject TournamentRegistrationController TournamentRegistrationController
+@inject TournamentManagingController TournamentManagingController
+@inject NavigationUrls NavigationUrls
+@inject IStringLocalizer<TournamentRegistrationLabels> _localizer
+
+<title>@_localizer["unregistrationTitleTeam"]</title>
+
+<div class="mt-3">
+	<Button Color="ButtonColor.Success" @onclick="() => NavigationUrls.ToTeamManagementPage(TeamId)">@_localizer["unregistrationTeamBack"]</Button>
+</div>
+
+<div class="mt-3">
+	<UIResponseRender Message="_canUnregisterMessage"></UIResponseRender>
+</div>
+
+<div class="mt-3">
+	<UIResponseRender Message="_messageAboutOutcome"></UIResponseRender>
+</div>
+
+<div class="mt-3">
+	@if (_canUnregisterMessage?.MessageType == QuickResponseMessageTypes.Success)
+	{
+		<Button Color="ButtonColor.Success" @onclick="UnregisterTeam">@_localizer["unregistrationTeamButton"]</Button>
+	}
+</div>
+
+
+@code {
+
+	/// <summary>
+	/// Id of the tournament -> for unregistration
+	/// </summary>
+	[Parameter]
+	public string TournamentId { get; set; }
+
+	/// <summary>
+	/// Id of the team to unregister from the tournament
+	/// </summary>
+	[Parameter]
+	public string TeamId { get; set; }
+
+	/// <summary>
+	/// Information if the team can unregister from tournament
+	/// </summary>
+	private QuickResponseMessage? _canUnregisterMessage;
+
+	/// <summary>
+	/// Information if the unregistration was successsful
+	/// </summary>
+	private QuickResponseMessage? _messageAboutOutcome;
+
+	protected override async Task OnInitializedAsync()
+	{
+		_canUnregisterMessage = await TournamentRegistrationController.CanUnregisterTeam(TournamentId, TeamId);
+		await InvokeAsync(StateHasChanged);
+	}
+
+	/// <summary>
+	/// Permorms unregistration from the tournament
+	/// </summary>
+	/// <returns></returns>
+	private async Task UnregisterTeam()
+	{
+		_canUnregisterMessage = await TournamentRegistrationController.CanUnregisterTeam(TournamentId, TeamId);
+		if(_canUnregisterMessage.MessageType != QuickResponseMessageTypes.Success)
+		{
+			await InvokeAsync(StateHasChanged);
+			return;
+		}
+		await TournamentManagingController.DeleteTeamFromTournament(TournamentId, TeamId);
+		_canUnregisterMessage = null;
+		_messageAboutOutcome = new SuccessfulMessage(_localizer["unregistrationTeamConfirmation"]);
+		await InvokeAsync(StateHasChanged);
+	}
+}

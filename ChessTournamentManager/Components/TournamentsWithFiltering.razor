@@ -1,0 +1,206 @@
+﻿@using Blazor.Flags
+@using ChessTournamentManager.CodeStructures
+@using ChessTournamentManager.Controllers
+@using ChessTournamentManager.DataServices
+@using ChessTournamentManager.LanguageAssets.Tournaments
+@using ChessTournamentMate.Shared
+@using ChessTournamentMate.Shared.QuickResponseMessages
+@using DatabaseCommunicator
+@using DatabaseCommunicator.Models
+@using Microsoft.AspNetCore.SignalR.Client
+@using Microsoft.Extensions.Localization
+
+@inject NavigationManager Navigation
+@inject NavigationUrls NavigationToUrls
+@inject TournamentController TournamentController;
+
+@inject IStringLocalizer<TournamentsLabels> _localizer
+
+<title>@_localizer["pageTitle"]</title>
+
+<BasicSpinner Visible="_loading"></BasicSpinner>
+
+@if (!_loading)
+{
+    <EditForm Model="_filter" OnValidSubmit="SearchTournaments">
+
+        <div class="row">
+            <div class="col-12">
+                <label class="form-label">@_localizer["tournamentName"]</label>
+                <InputText class="form-control" @bind-Value="_filter.Name"></InputText>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12 col-xl-6">
+                <label class="form-label">@_localizer["startDate"]</label>
+                <InputDate class="form-control" @bind-Value="_filter.StartDateFrom"></InputDate>
+            </div>
+            <div class="col-12 col-xl-6">
+                <label class="form-label">@_localizer["endDate"]</label>
+                <InputDate class="form-control" @bind-Value="_filter.StartDateTo"></InputDate>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12 col-md-6 col-xl-6">
+                <label class="form-label">@_localizer["country"]</label>
+                <InputSelect class="form-select" TValue="string" @bind-Value="_filter.Country">
+                    <option value=""></option>
+                    @foreach (Country country in CountriesMethods.AvailableCountries)
+                    {
+                        <option value="@country.Name()">@country.Name()</option>
+                    }
+                </InputSelect>
+            </div>
+
+            <div class="col-12 col-md-6 col-xl-6 mb-3">
+                <label class="form-label">@_localizer["city"]</label>
+                <InputText class="form-control" @bind-Value="_filter.City"></InputText>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col col-md col-xl-3">
+                <Button Class="form-control" Color="ButtonColor.Success" Type="ButtonType.Submit">@_localizer["searchButton"]</Button>
+            </div>
+        </div>
+
+
+    </EditForm>
+
+    @if (!_loadingTournaments)
+    {
+        <div class="mt-3">
+            <UIResponseRender Message="_message"></UIResponseRender>
+        </div>
+
+
+        <div class="mt-3">
+            <TournamentCardSlideShow Tournaments="_tournaments.ToList()"
+                                     ShowRegister="true"
+                                     RegisterUserForTournamentCallBack="@RegisterUserForTournament"
+                                     ShowTournamentInformation="true"
+                                     TournamentInformationCallBack="@ShowTournamentInformation">
+            </TournamentCardSlideShow>
+        </div>
+
+        @if (_tournaments.Count() > _tournamentCountLimit)
+        {
+            <UIResponseRender Message="@(new NotExistsInDatabase(_localizer["tournamentLimitWarning"]))"></UIResponseRender>
+        }
+    }
+    else
+    {
+        <div class="mt-3">
+            <BasicSpinner></BasicSpinner>
+        </div>
+    }
+
+}
+
+
+@code {
+
+    /// <summary>
+    /// Filter from the form, tournaments will be shown based on this filter
+    /// </summary>
+    [SupplyParameterFromForm]
+    public TournamentsFilter _filter { get; set; } = new();
+
+    /// <summary>
+    /// Tournaments which are shown
+    /// </summary>
+    private IEnumerable<Tournament> _tournaments = [];
+
+    /// <summary>
+    /// UI message for the user
+    /// </summary>
+    private QuickResponseMessage? _message;
+
+    /// <summary>
+    /// Page is loaded being retreived from the database
+    /// </summary>
+    private bool _loading = true;
+
+    /// <summary>
+    /// Tournaments are being retreived from the database
+    /// </summary>
+    private bool _loadingTournaments = false;
+
+    /// <summary>
+    /// Maximum number of tournaments which will be retreived from database
+    /// </summary>
+    private int _tournamentCountLimit = 100;
+
+    /// <summary>
+    /// Performs retreival of tournaments from the database
+    /// </summary>
+    /// <returns></returns>
+    public async Task SearchTournaments()
+    {
+        _loadingTournaments = true;
+        await InvokeAsync(StateHasChanged);
+
+        await Task.WhenAll(GetTournaments(_filter), Task.Delay(300));
+
+        _loadingTournaments = false;
+    }
+
+    /// <summary>
+    /// Shows page where it is possible to register to selected tournament
+    /// </summary>
+    /// <param name="tournamentId"></param>
+    public void RegisterUserForTournament(string tournamentId)
+    {
+        NavigationToUrls.ToTournamentRegistrationPage(tournamentId);
+    }
+
+    /// <summary>
+    /// Shows page where it is possible to show information about tournament
+    /// </summary>
+    /// <param name="tournamentId"></param>
+    public void ShowTournamentInformation(string tournamentId)
+    {
+        NavigationToUrls.ToTournamentPageForPlayer(tournamentId);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _loading = true;
+        await InvokeAsync(StateHasChanged);
+
+        await Task.WhenAll(GetTournaments(_filter), Task.Delay(300));
+
+        _loading = false;
+    }
+
+    /// <summary>
+    /// Performs retreival of tournaments from the database
+    /// </summary>
+    /// <returns></returns>
+    public async Task GetTournaments(TournamentsFilter _filter)
+    {
+        _tournaments = [];
+        try
+        {
+            _tournaments = await TournamentController.GetAllTournamentsAsync(_filter, _tournamentCountLimit + 1);
+        }
+        catch
+        {
+            _message = new UnsuccessfulMessage(_localizer["cannotGetTournamentsFromDatabase"]);
+            return;
+        }
+
+        if (_tournaments.Count() == 0)
+        {
+            _message = new NotExistsInDatabase(_localizer["noTournaments"]);
+        }
+        else
+        {
+            _message = null;
+        }
+        await InvokeAsync(StateHasChanged);
+
+    }
+}

@@ -1,0 +1,81 @@
+﻿@using ChessTournamentManager.Controllers
+@using ChessTournamentManager.DataServices
+@using ChessTournamentManager.LanguageAssets.TournamentManagementLabels
+@using ChessTournamentMate.Shared
+@using Microsoft.Extensions.Localization
+
+@inject ProfilePictureUploadController ProfilePictureUploadController
+@inject IStringLocalizer<TournamentManagementLabels> _localizer
+
+<UIResponseRender Message="_message"></UIResponseRender>
+
+<div class="row">
+	<InputFile OnChange="@LoadFile" class="form-control" accept=".jpg, .jpeg, .png, .bmg, .heif"></InputFile>
+</div>
+
+<div class="row">
+	<div class="mt-3">
+		<div class="col-xl-2">
+			<Button Class="form-control" Color="ButtonColor.Success" @onclick="@SavePicture">@_localizer["save"]</Button>
+		</div>
+	</div>
+</div>
+
+
+
+@code {
+
+	/// <summary>
+	/// Id of element for which is the uploaded picture
+	/// </summary>
+	[Parameter]
+	public string ForElement { get; set; }
+
+	private UploadProfilePicturePayLoad _picturePayload = new();
+
+	private QuickResponseMessage? _message;
+
+	/// <summary>
+	/// Loads file from the local computer of the user to the server
+	/// </summary>
+	/// <param name="args">Information about file - name will be used</param>
+	private async void LoadFile(InputFileChangeEventArgs args)
+	{
+		if(args.FileCount != 1)
+		{
+			return;
+		}
+
+		IBrowserFile picture = args.File;
+
+		byte[] readPicture = new byte[picture.Size];
+		using (var stream = picture.OpenReadStream(maxAllowedSize: long.MaxValue))
+		{
+			using(var reader = new MemoryStream())
+			{
+				await stream.CopyToAsync(reader);
+				readPicture = reader.ToArray();
+			}
+		}
+
+		_picturePayload = new(Path.GetExtension(picture.Name), readPicture, ForElement);
+	}
+
+	/// <summary>
+	/// Saves the picture in the database for specific entity
+	/// </summary>
+	/// <returns></returns>
+	public async Task SavePicture()
+	{
+		if (!ProfilePictureUploadController.SupportedFileExtensions.Contains(_picturePayload.FileExtension.ToLower()))
+		{
+			_message = new UnsuccessfulMessage($"{_localizer["uploadPictureFormInvalidFormat"]}{string.Join(", ", ProfilePictureUploadController.SupportedFileExtensions)}");
+			return;
+		}
+
+		await ProfilePictureUploadController.SaveProfilePicture(_picturePayload);
+
+		_message = null;
+	}
+
+}

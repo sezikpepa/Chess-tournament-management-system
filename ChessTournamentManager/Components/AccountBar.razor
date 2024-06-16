@@ -1,0 +1,35 @@
+﻿
+@* Provides button which logout the user and icon which after click redirects to logged user profile. *@
+
+@using BlazorBootstrap
+@using ChessTournamentManager.LanguageAssets.Account
+@using Microsoft.Extensions.Localization
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css">
+
+@inject IStringLocalizer<AccountLabels> _localizer;
+
+<AuthorizeView>
+
+    @* Icon which redirects to page with profile of logged user *@
+    <a href="/myProfile">
+        <i class="bi bi-person"></i>
+    </a>
+
+
+    @* Button to logout the user *@
+    <div class="ms-3">
+        <form action="Account/Logout" method="post">
+            <AntiforgeryToken />
+            <input type="hidden" name="ReturnUrl" value="" />
+            <button type="submit" class="nav-link btn btn-light">
+                <span class="bi bi-arrow-bar-left-nav-menu" aria-hidden="true"></span> @_localizer["logout"]
+            </button>
+        </form>
+    </div>
+
+</AuthorizeView>
+
+@code {
+
+}

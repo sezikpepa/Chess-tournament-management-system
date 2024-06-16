@@ -1,0 +1,214 @@
+﻿
+@* Page where it is possible to create a new tournament *@
+
+@page "/createTournament"
+
+@rendermode @(new InteractiveServerRenderMode(false))
+@attribute [StreamRendering]
+
+@attribute [Authorize]
+
+@using ChessTournamentManager.CodeStructures
+@using ChessTournamentManager.Controllers
+@using ChessTournamentManager.Data
+@using ChessTournamentManager.DataServices
+@using ChessTournamentManager.LanguageAssets.CreateTournament
+@using ChessTournamentMate.Shared
+@using ChessTournamentMate.Shared.AvailableValues
+@using DatabaseCommunicator.Models;
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.Extensions.Localization
+@using TournamentLibrary.Participants;
+@using TournamentLibrary.TournamentHandlers;
+
+@using Microsoft.AspNetCore.SignalR.Client
+
+@inject TournamentManagingController TournamentManagingController
+@inject UserInformation UserInformation
+@inject OwnProfileController OwnProfileController
+@inject NavigationUrls NavigationUrls
+
+@inject IStringLocalizer<CreateTournamentLabels> _localizer
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css">
+
+
+<title>@_localizer["title"]</title>
+
+<QuestionMarkWithHelp ToolTipText="@_localizer["tooltip"]"></QuestionMarkWithHelp>
+
+<BasicSpinner Visible="_isLoading"></BasicSpinner>
+
+@if (!_isLoading && !_errorOccured)
+{
+    @if (_isProfileFilled)
+    {
+        <UIResponseRender Message="ResultMessage"></UIResponseRender>
+        @if (ResultMessage?.MessageType == QuickResponseMessageTypes.Success)
+        {
+            <Button Color="ButtonColor.Success" @onclick="() => NavigationUrls.ToTournamentManagementPage(_lastTournamentId!)">@_localizer["toTournamentManagementPageButton"]</Button>
+        }
+
+        <EditForm Model="@Model" OnValidSubmit="@SendCreateNewTournament" FormName="CreateNewTournamentForm">
+            <DataAnnotationsValidator />
+            <ValidationSummary></ValidationSummary>
+            <div class="row g-3">
+                <div class="col-12">
+                    <label class="form-label" for="tournamentNameInput">@_localizer["tournamentName"]</label>
+                    <InputText class="form-control" @bind-Value="Model.TournamentName" id="tounamentNameInput"></InputText>
+                </div>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-12">
+                    <label class="form-label" for="tournamentNameInput">@_localizer["shortDescription"]</label>
+                    <InputText class="form-control" @bind-Value="Model.ShortDescription" id="tounamentNameInput"></InputText>
+                </div>
+            </div>
+
+            <div class="row g-3">
+                <div class="col col-xl-5">
+                    <label class="form-label" for="tournamentStartDayInput">@_localizer["startDate"]</label>
+                    <DateInput EnableMinMax=true Min="DateTime.Now" Max="DateTime.MaxValue" class="form-control" @bind-Value="Model.StartDate" id="tournamentStartDayInput"></DateInput>
+                </div>
+            </div>
+
+            <div class="row mt-1">
+                <div class="col">
+                    <Switch Label="@_localizer["isMultiDay"]" @bind-Value="_isMultiDayTournament"></Switch>
+                </div>
+            </div>
+
+            @if (_isMultiDayTournament)
+            {
+                <div class="row g-3">
+                    <div class="col col-xl-5">
+                        <label class="form-label" for="tournamentEndDayInput">@_localizer["endDate"]</label>
+                        <DateInput EnableMinMax=true Min="@Model.StartDate.AddDays(1)" Max="DateTime.MaxValue" class="form-control" @bind-Value="Model.EndDate" id="tournamentEndDayInput" />
+                    </div>
+                </div>
+            }
+
+
+            <div class="row g-3">
+                <div class="col col-lg-6 col-xl-3">
+                    <label class="form-label" for="selectTournamentTypeCombobox">@_localizer["tournamentType"]</label>
+                    <select class="form-select" id="selectTournamentTypeCombobox" @bind="Model.TournamentType">
+                        @foreach (string tournamentType in Enum.GetNames<TournamentTypes>())
+                        {
+                            <option value="@tournamentType">@tournamentType</option>
+                        }
+                    </select>
+
+                </div>
+            </div>
+
+            <div class="row mt-2">
+                <div class="col col-xl-3">
+                    <Switch Label="@_localizer["isTeam"]" @bind-Value="Model.IsTeam"></Switch>
+                </div>
+            </div>
+
+            <div class="row mt-3">
+                <div class="col-2">
+                    <Button Color="ButtonColor.Success" Type="ButtonType.Submit">@_localizer["createButton"]</Button>
+                </div>
+            </div>
+        </EditForm>
+    }
+    else
+    {
+        <InfoAboutNotCompletedProfile Message="@_localizer["notCompletedProfileWarning"]"></InfoAboutNotCompletedProfile>
+    }
+}
+
+<ConnectionToDatabaseFailed Visible="_errorOccured"></ConnectionToDatabaseFailed>
+
+
+@code {
+
+    /// <summary>
+    /// Information about new tournament - from form
+    /// </summary>
+    [SupplyParameterFromForm]
+    private Tournament Model { get; set; } = new();
+
+    /// <summary>
+    /// Tournament is for more days
+    /// </summary>
+    private bool _isMultiDayTournament = false;
+
+    public QuickResponseMessage? ResultMessage { get; set; }
+
+    /// <summary>
+    /// Logged user filled own profile
+    /// </summary>
+    private bool _isProfileFilled = false;
+
+    /// <summary>
+    /// Id of the created tournament
+    /// </summary>
+    private string? _lastTournamentId;
+
+    /// <summary>
+    /// Page is still loading
+    /// </summary>
+    private bool _isLoading = true;
+
+    private bool _errorOccured = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _isLoading = true;
+        await InvokeAsync(StateHasChanged);
+
+        DateTime initializeStart = DateTime.Now;
+
+        try
+        {
+            string accountId = (await UserInformation.GetLoggedUserIdAsync())!;
+            _isProfileFilled = await OwnProfileController.AccountHasFilledProfile(accountId);
+
+            await Task.Delay(Math.Max((initializeStart.AddMilliseconds(300) - DateTime.Now).Milliseconds, 0));
+            _isLoading = false;
+        }
+        catch
+        {
+            _errorOccured = true;
+            _isLoading = false;
+            await InvokeAsync(StateHasChanged);
+        }
+
+    }
+
+    /// <summary>
+    /// Creates new tournament in the database
+    /// </summary>
+    /// <returns></returns>
+    private async Task SendCreateNewTournament()
+    {
+        string accountId = (await UserInformation.GetLoggedUserIdAsync())!;
+
+        if(_isMultiDayTournament == false)
+        {
+            Model.EndDate = Model.StartDate;
+        }
+
+        try
+        {
+            _lastTournamentId = await TournamentManagingController.CreateNewTournament(Model, accountId);
+        }
+        catch
+        {
+            ResultMessage = new UnsuccessfulMessage(_localizer["databaseErrorSaving"]);
+            _lastTournamentId = null;
+            await InvokeAsync(StateHasChanged);
+            return;
+        }
+
+        ResultMessage = new SuccessfulMessage($"{_localizer["InfoToManagementPageButtonPart1"]} {Model.TournamentName} {_localizer["InfoToManagementPageButtonPart2"]}");
+        Model = new();
+
+        await InvokeAsync(StateHasChanged);
+    }
+}

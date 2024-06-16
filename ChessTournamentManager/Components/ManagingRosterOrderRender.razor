@@ -1,0 +1,84 @@
+﻿
+@* Component which handles order of players in the team and saves the result to the database.*@
+
+@using DatabaseCommunicator.Models
+
+@rendermode InteractiveServer
+
+@for (int i = 0; i < Players.Count; i++)
+{
+	<ManagingRosterOrderPlayerRender OrderNumber="i + 1" 
+									 Player="Players[i]"
+									 MoveUpCallBack="MoveUp"
+									 MoveDownCallBack="MoveDown"
+									 DeleteCallBack="Delete"
+									 DisabledUp="@(i == 0)"
+									 DisabledDown="@(i == Players.Count - 1)"
+									 CanEdit="CanEdit">
+	</ManagingRosterOrderPlayerRender>
+}
+
+@code {
+
+	/// <summary>
+	/// Players which are currently in the team. Ordered by the position in the team.
+	/// </summary>
+	[Parameter]
+	public List<Player> Players { get; set; } = [];
+
+	/// <summary>
+	/// Methods which handles deletion of players from the team.
+	/// </summary>
+	[Parameter]
+	public EventCallback PlayerDeletedCallback { get; set; }
+
+	/// <summary>
+	/// User have rights to permorfm editing of team players.
+	/// </summary>
+	[Parameter]
+	public bool CanEdit { get; set; } = true;
+
+	protected override async Task OnParametersSetAsync()
+	{
+		await InvokeAsync(StateHasChanged);
+	}
+
+	/// <summary>
+	/// Priority of the player is moved on the upper position
+	/// </summary>
+	/// <param name="orderNumber">Current position of the player</param>
+	/// <returns></returns>
+	public async Task MoveUp(int orderNumber)
+	{
+		var tmp = Players[orderNumber - 1];
+		Players[orderNumber - 1] = Players[orderNumber - 2];
+		Players[orderNumber - 2] = tmp;
+		await InvokeAsync(StateHasChanged);
+	}
+
+	/// <summary>
+	/// Priority of the player is moved on the lower position
+	/// </summary>
+	/// <param name="orderNumber">Current position of the player</param>
+	/// <returns></returns>
+	public async Task MoveDown(int orderNumber)
+	{
+		var tmp = Players[orderNumber - 1];
+		Players[orderNumber - 1] = Players[orderNumber];
+		Players[orderNumber ] = tmp;
+		await InvokeAsync(StateHasChanged);
+	}
+
+	/// <summary>
+	/// Delete player from the team.
+	/// </summary>
+	/// <param name="orderNumber">Current position of the player</param>
+	/// <returns></returns>
+	public async void Delete(int orderNumber)
+	{
+		Players.RemoveAt(orderNumber - 1);
+		await PlayerDeletedCallback.InvokeAsync();
+		await InvokeAsync(StateHasChanged);
+	}
+
+}

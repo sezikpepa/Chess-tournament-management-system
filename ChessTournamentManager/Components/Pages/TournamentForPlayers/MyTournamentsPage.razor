@@ -1,0 +1,185 @@
+﻿
+@* Page with all tournament which have connection with logged user. *@
+
+@page "/myTournaments"
+
+@rendermode @(new InteractiveServerRenderMode(false))
+@attribute [StreamRendering]
+
+@using ChessTournamentManager.CodeStructures
+@using ChessTournamentManager.Controllers
+@using ChessTournamentManager.LanguageAssets.MyTournaments
+@using ChessTournamentMate.Shared
+@using DatabaseCommunicator.Models
+@using Microsoft.Extensions.Localization
+
+@inherits LoadableComponent
+
+
+@attribute [Authorize]
+
+@inject OwnProfileController OwnProfileController
+@inject PlayerController PlayerController
+@inject UserInformation UserInformation
+@inject NavigationUrls NavigationUrls
+
+@inject IStringLocalizer<MyTournamentsLabels> _localizator
+
+<title>@_localizator["title"]</title>
+
+
+<QuestionMarkWithHelp ToolTipText="@_localizator["tooltip"]" />
+
+
+<BasicSpinner Visible="_isLoading"></BasicSpinner>
+
+@if (!_isLoading && !_errorOccured)
+{
+	@if (!_showNotCompleteProfile)
+	{
+		<div class="row ">
+			<h2>@_localizator["currentAndUpcomingTournaments"]</h2>
+
+			@if (_currentAndUpComingTournaments.Count() == 0)
+			{
+				<UIResponseRender Message="@(new NotExistsInDatabase(_localizator["noTournamentsFound"]))"></UIResponseRender>
+			}
+			else
+			{
+				<TournamentCardSlideShow ShowTournamentUnRegister="true" TournamentUnRegister="(tournamentId) => NavigationUrls.ToUnregisterFromTournament(tournamentId)" Tournaments="_currentAndUpComingTournaments.ToList()" ShowTournamentInformation="true" TournamentInformationCallBack="(string id) => NavigationUrls.ToTournamentPageForPlayer(id)"></TournamentCardSlideShow>
+			}
+		</div>
+
+		<div class="row mt-3">
+			<h2>@_localizator["favouriteTournaments"]</h2>
+
+			@if (_favouriteTournaments.Count() == 0)
+			{
+				<UIResponseRender Message="@(new NotExistsInDatabase(_localizator["noTournamentsFound"]))"></UIResponseRender>
+			}
+			else
+			{
+				<TournamentCardSlideShow Tournaments="_favouriteTournaments.ToList()" ShowTournamentInformation="true" TournamentInformationCallBack="(string id) => NavigationUrls.ToTournamentPageForPlayer(id)"></TournamentCardSlideShow>
+			}
+
+		</div>
+
+
+		<div class="row mt-3">
+			<h2>@_localizator["pastTournaments"]</h2>
+
+			@if (_pastTournaments.Count() == 0)
+			{
+				<UIResponseRender Message="@(new NotExistsInDatabase(_localizator["noTournamentsFound"]))"></UIResponseRender>
+			}
+			else
+			{
+				<TournamentCardSlideShow Tournaments="_pastTournaments.ToList()" ShowTournamentInformation="true" TournamentInformationCallBack="(string id) => NavigationUrls.ToTournamentPageForPlayer(id)"></TournamentCardSlideShow>
+			}
+		</div>
+	}
+	else
+	{
+		<InfoAboutNotCompletedProfile Message="@_localizator["messageNotCompletedProfile"]"></InfoAboutNotCompletedProfile>
+	}
+
+}
+
+<ConnectionToDatabaseFailed Visible="_errorOccured"></ConnectionToDatabaseFailed>
+
+
+@code {
+
+	/// <summary>
+	/// Tournaments which were marked by a logged user as favourite
+	/// </summary>
+	private IEnumerable<Tournament> _favouriteTournaments = [];
+
+	/// <summary>
+	/// Tournaments where the logged user is registered but will play there in the future
+	/// </summary>
+	private IEnumerable<Tournament> _currentAndUpComingTournaments = [];
+
+	/// <summary>
+	/// Tournaments where the logged user is registered but they already ended
+	/// </summary>
+	private IEnumerable<Tournament> _pastTournaments = [];
+
+	/// <summary>
+	/// Page is still loading
+	/// </summary>
+	private bool _isLoading = true;
+
+	/// <summary>
+	/// User did not filled personal information
+	/// </summary>
+	private bool _showNotCompleteProfile = false;
+
+	/// <summary>
+	/// Error during retreiving the data
+	/// </summary>
+	private bool _errorOccured = false;
+
+	protected override async Task OnInitializedAsync()
+	{
+		_isLoading = true;
+		_showNotCompleteProfile = false;
+		DateTime initializeStart = DateTime.Now;
+		try
+		{
+			string accountId = (await UserInformation.GetLoggedUserIdAsync())!;
+
+			if (!(await OwnProfileController.AccountHasFilledProfile(accountId)))
+			{
+				await WaitMinimumTime(initializeStart, 300);
+				_showNotCompleteProfile = true;
+				_isLoading = false;
+				return;
+			}
+
+			string playerId = (await OwnProfileController.GetId(accountId))!;
+
+			IEnumerable<Tournament> tournaments = await PlayerController.GetPlayersTournaments(playerId);
+			await GetFavouriteTournaments();
+
+			SortTournamentsIntoCorrectList(tournaments);
+			await WaitMinimumTime(initializeStart, 300);
+			_isLoading = false;
+			await InvokeAsync(StateHasChanged);
+		}
+		catch
+		{
+			_isLoading = false;
+			_errorOccured = true;
+			await InvokeAsync(StateHasChanged);
+		}
+
+	}
+
+	/// <summary>
+	/// Sorts tournaments into 2 sections -> past/upcomings
+	/// </summary>
+	/// <param name="tournaments"></param>
+	private void SortTournamentsIntoCorrectList(IEnumerable<Tournament> tournaments)
+	{
+		DateTime now = DateTime.Now;
+
+		_currentAndUpComingTournaments = tournaments.Where(x => x.StartDate.Date >= now.Date || (x.StartDate <= now.Date && x.EndDate.Date >= now.Date)).ToList();
+		_pastTournaments = tournaments.Where(x => !_currentAndUpComingTournaments.Contains(x)).ToList();
+	}
+
+	/// <summary>
+	/// Retreives all tournaments marked as favourite by logged user
+	/// </summary>
+	/// <returns></returns>
+	private async Task GetFavouriteTournaments()
+	{
+		_favouriteTournaments = [];
+		string? id = await UserInformation.GetLoggedUserIdAsync();
+		if (id is not null)
+		{
+			_favouriteTournaments = await PlayerController.GetFavouriteTournaments(id);
+		}
+		await InvokeAsync(StateHasChanged);
+	}
+}

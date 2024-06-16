@@ -1,0 +1,13 @@
+﻿.tournamentPicture{
+    width: 400px;
+    height: 400px;
+}
+
+
+.noWrap {
+    white-space: nowrap;
+}
+
+.overFlowHidden {
+    overflow: hidden;
+}

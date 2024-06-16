@@ -1,0 +1,91 @@
+﻿@using ChessTournamentManager.CodeStructures
+@using ChessTournamentManager.Controllers
+@using ChessTournamentManager.LanguageAssets.TeamManagement
+@using ChessTournamentMate.Shared
+@using ChessTournamentMate.Shared.QuickResponseMessages
+@using DatabaseCommunicator.Models
+@using Microsoft.Extensions.Localization
+
+@rendermode @(new InteractiveServerRenderMode(false))
+
+
+@inject TeamController TeamController
+@inject NavigationUrls NavigationUrls
+@inject IStringLocalizer<TeamManagementLabels> _localizer
+
+<div class="row mt-3">
+	<h2>@_localizer["teamTournamentsCurrent"]</h2>
+
+	@if (_currentAndUpComingTournaments.Count() == 0)
+	{
+		<UIResponseRender Message="@(new NotExistsInDatabase(_localizer["teamTournamentsManagementNoTournaments"]))"></UIResponseRender>
+	}
+	else
+	{
+		<TournamentCardSlideShow Tournaments="_currentAndUpComingTournaments.ToList()"
+								 ShowTournamentUnRegister="true" 
+								 TournamentUnRegister="(tournamentId) => NavigationUrls.ToUnregisterFromTournamentTeam(tournamentId, TeamId)" 							 
+								 ShowTournamentInformation="true"
+								 TournamentInformationCallBack="(string id) => NavigationUrls.ToTournamentPageForPlayer(id)">
+        </TournamentCardSlideShow>
+	}
+</div>
+
+<div class="row mt-3">
+	<h2>@_localizer["teamTournamentsPast"]</h2>
+
+	@if (_pastTournaments.Count() == 0)
+	{
+		<UIResponseRender Message="@(new NotExistsInDatabase(_localizer["teamTournamentsManagementNoTournaments"]))"></UIResponseRender>
+	}
+	else
+	{
+		<TournamentCardSlideShow Tournaments="_pastTournaments.ToList()"
+								 ShowTournamentInformation="true"
+								 TournamentInformationCallBack="(string id) => NavigationUrls.ToTournamentPageForPlayer(id)">
+        </TournamentCardSlideShow>
+	}
+</div>
+
+
+
+
+@code {
+
+	/// <summary>
+	/// Id of the team which will be managed
+	/// </summary>
+	[Parameter]
+	public string TeamId { get; set; }
+
+	/// <summary>
+	/// Current and upcoming tournaments where the team is registered
+	/// </summary>
+	private IEnumerable<Tournament> _currentAndUpComingTournaments = [];
+
+	/// <summary>
+	/// Tournament where the team is registered, but already ended
+	/// </summary>
+	private IEnumerable<Tournament> _pastTournaments = [];
+
+
+	protected override async Task OnInitializedAsync()
+	{
+		IEnumerable<Tournament> tournaments = await TeamController.GetTournamentsOfTeam(TeamId);
+
+		SortTournamentsIntoCorrectList(tournaments);
+		await InvokeAsync(StateHasChanged);
+	}
+
+	/// <summary>
+	/// Sorts tournaments of the team into correct parts of the UI - based on the date of the tournament
+	/// </summary>
+	/// <param name="tournaments"></param>
+	private void SortTournamentsIntoCorrectList(IEnumerable<Tournament> tournaments)
+	{
+		DateTime now = DateTime.Now;
+
+		_currentAndUpComingTournaments = tournaments.Where(x => x.StartDate.Date >= now.Date || (x.StartDate.Date <= now.Date && x.EndDate.Date >= now.Date)).ToList();
+		_pastTournaments = tournaments.Where(x => !_currentAndUpComingTournaments.Contains(x)).ToList();
+	}
+}

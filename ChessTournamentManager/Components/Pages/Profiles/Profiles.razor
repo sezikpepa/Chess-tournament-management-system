@@ -1,0 +1,25 @@
+﻿
+@* Page which shows profile of a selected player *@
+
+
+@page "/profiles/{PlayerId}"
+@using ChessTournamentManager.LanguageAssets.Profiles
+@using Microsoft.Extensions.Localization
+
+@rendermode @(new InteractiveServerRenderMode(false))
+@attribute [StreamRendering]
+@inject IStringLocalizer<ProfilesLabels> _localizer
+
+<title>@_localizer["title"]</title>
+
+<QuestionMarkWithHelp ToolTipText="@_localizer["profileTooltip"]" />
+
+<PlayerProfileLoading PlayerId="@PlayerId"></PlayerProfileLoading>
+
+
+@code{
+
+	[Parameter]
+	public string PlayerId { get; set; }
+
+}

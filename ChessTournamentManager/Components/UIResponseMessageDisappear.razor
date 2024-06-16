@@ -1,0 +1,60 @@
+﻿@using ChessTournamentMate.Shared
+@using System.Timers
+
+
+
+@if(Message is not null)
+{
+	if (!_hide)
+	{
+		<UIResponseRender Message="@Message"></UIResponseRender>
+	}
+}
+
+
+@code {
+
+	/// <summary>
+	/// Time in milliseconds after which the message should disappear
+	/// </summary>
+	[Parameter]
+	public double Timeout { get; set; } = 10_000;
+
+	/// <summary>
+	/// Message which should be shown
+	/// </summary>
+	[Parameter]
+	public QuickResponseMessage? Message { get; set; }
+
+	private Timer? _timer;
+
+	private bool _hide = false;
+
+	protected override async Task OnParametersSetAsync()
+	{
+		// https://learn.microsoft.com/en-us/dotnet/api/system.timers.timer.elapsed?view=net-8.0
+
+		_timer?.Stop();
+
+		_timer = new Timer();
+		_timer.Interval = Timeout;
+		_timer.Elapsed += HideMessage;
+		_timer.AutoReset = false;
+		_timer.Enabled = true;
+		_hide = false;
+
+		await InvokeAsync(StateHasChanged);
+	}
+
+	/// <summary>
+	/// Hides message, it is not shown in the UI
+	/// </summary>
+	/// <param name="source">Trigger</param>
+	/// <param name="e"></param>
+	private void HideMessage(Object? source, ElapsedEventArgs e)
+	{
+		_hide = true;
+		InvokeAsync(StateHasChanged);
+	}
+
+}

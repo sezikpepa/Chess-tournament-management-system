@@ -1,0 +1,203 @@
+\documentclass{article}
+
+% Language setting
+% Replace `english' with e.g. `spanish' to change the document language
+\usepackage[english]{babel}
+
+% Set page size and margins
+% Replace `letterpaper' with `a4paper' for UK/EU standard size
+\usepackage[letterpaper,top=2cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
+
+% Useful packages
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage[colorlinks=true, allcolors=blue]{hyperref}
+
+\title{Your Paper}
+\author{You}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Your abstract.
+\end{abstract}
+
+\section{Úvod}
+
+Jakožto pravidelný účastník šachových turnajů a soutěží jsem zpozoroval určité nedostatky v organizaci. Svou prací bych chtěl ulehčit organizaci menších lokálních turnajů. Program by měl zahrnovat všechny části organizace turnaje a automatizovat je.
+
+Jako zásadní problém shledávám v nedostatku kvalitních programů pro organizaci pro jednotlivé části turnaje jsou používány různé programy, které většinou nejsou na danou činnost uzpůsobeny. Tímto může vzniknout několik problémů z důvodu nekonzistence dat, jelikož je vše závislé na pečlivosti organizátora, kterému to přidělává spoustu práce, která ho odvádí od dalších organizačních činností.
+
+Cílem práce je tedy vytvořit program, pomocí kterého organizátoři menších lokálních turnajů budou moci uspořádat turnaj bez toho aniž by se museli zabývat technickými detaily a soustředit se pouze na organizaci. 
+
+V následujících kapitolách se bude možné nalézt informace o průběhu šachového turnaje, aktuálních programech a jejich nevýhodách, analýzu výběru technologií pro implementaci, programátorskou dokumentaci a též uživatelskou dokumentaci.
+
+\section{Jak probíhá šachový turnaj}
+
+\subsection{Části šachového turnaje}
+
+Než začneme s analýzou problému a jeho následné vyřešení je nutné si uvědomit, jaké části má šachový turnaj a jak spolu souvisí. Toto nám pomůže lépe navrhnout řešení, které bude splňovat všechny požadavky na funkcionalitu a bude v budoucnu dále rozšiřitelné.
+
+\subsubsection{Vytvoření turnaje - propozice}
+
+Aby účastníci věděli, zda je pro ně turnaj vhodný a budou se na něj chtít přihlásit je nutné jim poskytnout určité informace, které jsou většinou dostupné na dokumentu, který se nazývá propozice turnaje. Mezi hlavní údaje patří adresa turnaje, způsob losování jednotlivých kol, datum konání a další.
+
+\subsubsection{Registrace}
+
+Pokud se účastník po přečtení propozic rozhodne pro účast v turnaji, případně jako hráč nějakého týmu, je nutné organizátorovi poskytnout určité osobní informace, aby organizátor věděl, kdo se bude turnaje účastnit.
+
+\subsubsection{Losování kol}
+
+Po zahájení turnaje je nutné v každém kole každému účastníkovi přiřadit protivníka proti kterému bude hrát a bude mít možnost získat body. Přiřazení protivníka probíhá dle předem definovaného způsobu, především turaje probíhají ve formátech PlayOff, RoundRobin, Swiss.
+Výběr losovacího formátu záleží čiště na organizátorovi turnaje a je na jeho uvážení, které formát je pro daný turnaj nejvhodnější na základě prostorových možností, počtu účastníků či dalších faktorech.
+
+\subsubsection{Výsledky}
+
+Po odehrání všech kol turnaj již zbývá jenom určit konečné pořadí daného turnaje. Dle zvoleného losování může tento proces být odlišný. Výsledky je poté vhodné sdílet s ostatními účastníky, aby byly dostupné i po skončení turnaje.
+
+\subsection{Druhy turnajů dle rozlosování}
+
+Na konci turnaje je nutné sečíst body všech hráčů a určit vítěze, případně hráče na dalších místech, které se odvíjí dle druhy losování. Tyto jsou poté různými způsoby zveřejněny, aby byly přístupné ostatním, též mohou být odeslány elo zápočet.
+
+
+\subsubsection{Round robin}
+
+Round Robin, každý proti každému, je druh rozřazování, během kterého každý hráč bude pustupně hrát zápas proti všem ostatním účastníkům turnaje. Mezi hlavní přednosti patří jeho spravedlnost. Zápas proběhne mezi každou možnou dvojicí a tudíž někdo nemůže skončit na horší pozici, protože hrál proti těžším protivníkům. Přichází s tím naopak i hlavní nevýhoda - velký počet kol, které je nutné odehrát. Od určitého počtu hráčů je tento druh velmi nepraktický, hodí na se na menší uzavřené turnaje, které není nutné odehrát v jednom dni.
+
+\subsubsection{PlayOff}
+
+V kontrastu rozřazování Round Robin se nachází PlayOff verze turnaje. Do dalšího kola postupuje vždy vítěž kola předchozího, což nám zaručí velmi rychlé ukončení turnaje, jelikož počet kol nutných ke zjištění vítěze odpovídá $\lceil \log_2(pocetHracu) \rceil$. Vhodný je tedy na turnaje o značném počtu hráčů. 
+Jelikož je ale poražený automaticky vyřazen a v turnaji již dále nehraje, není vhodné tento formát použít v případě, kdy nám počet hráčů neumožňuje jinak. Dalším problémem je nemožnost zjištění pořadí dalších účastníků, kteří se poté nachází na dělených místech. Kvůli těmto nevýhodám se v šachovým turnajích, s výjimkou mistrovských soutěží, nevyskytuje.
+
+CHYBÍ ZDROJ O POPULARITĚ
+
+
+\subsubsection{Švýcarský systém}
+Většina šachových soutěží se odehrává tímto typem losování, jelikož jeho výhody převažují jeho nevýhody. Tento formát je velmi univerzální a variabilní pro většinu turnajů. Jeho hlavní myšlenka spočívá v párování hráčů se stejným počtem bodů v každém kole. Tímto způsobem není nutné hrát všechny zápasy, jelikož silní hráči s největší pravděpodobnostní vyhrajou zápasy hráčům slabších. Eliminací těchto zápasů můžeme efektivně určit vítěze turnaje, ale i hráče na ostatních pozicích. Abychom s jistotou určili vítěze a nenastala nám situace kdy dva hráči budou mít maximální možný počet bodů, ale ještě spolu nehráli, je nutné odehrát, jako v PlayOff turnaji, alespoň  $\lceil \log_2(pocetHracu) \rceil$ kol. Jelikož k odehrání zápasů není nutný rozsáhlý prostor a drahé vybavení, tento druh rozřazení obsahuje všechny výhody PlayOff turnaje, ale zároveň eliminuje jeho nevýhody. Tudíž je to preferovaný systém.
+
+CHYBÍ ZDROJ O POPULARITĚ
+
+V případě většího počtu účastníků na konci turnaje by zůstalo na konci turnaje několik hráčů se stejným bodovým ziskem na děleném místě. Aby se tomuto zabránilo existují tzv. "pomocná hodnocení". V případně rovnosti bodového zisku dochází k určení pořadí pomocí pomocných hodnocení. O jejich proritě rozhoduje organizátor turnaje. Mezi nejčastější patří níže vyjmenované.
+
+Buchholz - odpovídá součtu bodů všech soupeřů, se kterými daný hráč odehrál partii.
+Krácený Buchholz - počítá se stejně jako klasický Buchholz, ale neberou se v potaz výsledky s nejlepším a nejhorším protivníkem.
+SonnenBorn-Berger - součet bodů všech soupeřů, kde každý výsledek je vynásobený bodovým ziskem v dané partii.
+Počet partií s černými figurami - hrát na černé figury značí jistou nevýhodu, tudíž upřednostníme hráče, který hrál s touto nevýhodou vícekrát.
+
+\section{Programy pro správu turnaje - současný stav}
+
+\subsection{Losovací nástroje}
+Pro losování turnaje je vhodné použít software k tomu určený. Turnaje losované stylem PlayOff jsou zvládnutelné i bez pomocného programu, je vhodné ho ale použít abychom neudělali nějakou chybu. Naopak turnaje typu Swiss je velmi náročené losovat bez pomocného softwaru, který udělá tuto práci za nás, z důvodu náročných pravidel, které je nutné při losování dodržet. Mezi známe programy patří například Swiss-Manager a SwissSys. V následujících podkapitolách se podíváme na jejich výhody a nevýhody, abychom mohli tyto nedostatky případně vylepšit.
+
+CHYBÍ ZDROJ O TOM, ŽE JE VŠUDE SWISSMANAGER
+\subsubsection{Swiss-Manager}
+Program, který je mezi šachovou komunitou velmi známý, poskytuje především velké množství nastavení pro losování turnajů typu Swiss. Tato nastavení mohou být užitečná, ale jsou vhodná pro velké turnaje mistrovské kategorie. Pro většinu lidí jsou tyto nastavení zbytečně matoucí a pro začínající organizátory mohou působit matoucím dojmem. 
+
+OBRÁZEK ÚVODNÍ STRÁNKY SWISS-MANAGER
+
+
+
+\section{Analýza}
+
+\subsection{Hlavní funkcionality}
+
+Předtím, než uděláme rozhodnutí o technologiích, se zamyslíme o hlavních akcích, které organizátor a hráč by chtěl v aplikaci dělat.
+
+\subsubsection{Hráč}
+
+\begin{itemize}
+  \item Přihlášení své osoby na turnaj
+  \item Vytvoření týmu a jeho přihlášení na turnaj
+  \item Zjištění soupeře pro dané kolo
+  \item Zobrazení svých zápasů v turnaji
+  \item Zjištění finálních výsledků
+\end{itemize}
+
+\subsection{Organizátor}
+
+\begin{itemize}
+    \item Zobrazení registrovaných hráčů nebo týmů
+    \item Vytvoření nového turnaje
+    \item Vygenerování rozlosování kola pro daný turnaj
+    \item Vygenerování a zobrazení výsledků
+\end{itemize}
+
+\subsection{Desktopová nebo webová aplikace}
+V prvé řadě je nutné rozhodnout o platformě, na kterou bude aplikace vyvíjena. Při pohledu na funkcionality, které jsou nutné provádět, vidímě, že každá z nich je požadavek na manipulaci s daty a jejich následné zobrazení. Výpočty jsou tedy nárazové a nedochází k souběžnému náročnému výpočtu po delší dobu. Tato data by měla být přístupná pro všechny uživatele, budeme tedy potřebovat, aby byla uložena na přístupném úložišti. Pro snížení reakční doby aplikace bychom chtěli minimalizovat množství přenášených dat.
+
+Mezi organizátory dle mé zkušenosti patří lidé staršího věku, především věková skupina 50 až 60, tudíž by uspořádání turnaje bylo mělo být co nejjedudušší z důvodu slabší počítačové gramotnosti v této věkové kategorii. Chtěli bychom docílit co nejjednoduššího ovládání bez rozsáhlejší počítačové gramotnosti.
+
+Jelikož šachy se odehrávají v budovách a prakticky v každé místnosti se nachází internetové připojení není nutné uvažovat tento nedostatek za závažný problém.
+
+Z těchto důvodů byla zvolena webová aplikace, jelikož data mohou být uložena na serveru společně s aplikací, což sníží reakční dobu. Webová aplikace též uživatelům umožní okamžité užívání aplikace bez instalací. V případě nové verze aplikace nebudou nutné zatěžovat uživatele aktualizacemi a oni se budou moci soustředit pouze na organizaci a hraní turnajů.
+
+
+\subsection{Programovací jazyk a framework}
+Abychom nemuseli řešit technické detaily, které vývoj webové aplikace přináší je nutné vybrat vhodný programovací jazyk a případný framework, který nám usnadní implementaci tohoto projektu.
+
+\subsubsection{PHP}
+PHP patří mezi standardní programování jazyk na straně serveru. Tento jazyk ale vznikl již v roce 1995 (citovat - https://www.php.net/manual/en/history.php.php), což v případně rychle měnícího se prostředí jako je web znamená dlouhou dobu. Během těchto téměř třiceti let došlo k vytvoření nových datových formátů a programovacích standardů, které nové jazyky umí lépe zpracovat. Též nepatří mezi silně typované jazyky, což nezapadá do mé preference. Jako další problém shledávám neefektivní předávání dat mezi backend a frontend částí aplikace.
+
+\subsubsection{Blazor}
+Mezi relativně nové CITOVAT VZNIK patří framework pro vývoj webových aplikací od firmy Microsoft. Tento framework běží na platformě .NET, která nám poskytuje velké množství knihoven pro prakticky jakoukoliv činnost. Též nám umožňuje vyvíjet aplikaci v C\# na backend i frontend části aplikace. Dalším důležitým aspektem je integrovaná podpora různých funkcí jako je stream rendering či autentifikace a autorizace. Z těchto důvodů byl pro vývoj vybrán tento framework.
+
+\subsubsection{Frontend}
+
+Přestože moderní HTML a CSS, které se snadno používají v Blazor frameworku a zároveň nám umožňují vyvinout dobře vypadající webovou aplikaci mají jisté nedostatky v podobě nutnosti upravovat jednotlivé detaily každého elementu abychom dosáhli cílené podoby. Tento problém řeší různé knihovny s již předvytvořenými styly, jako je například Bootstrap. Tento výběr by nám umožnil rychlý vývoj frontend části aplikace a automatickou responsibilitu. Jelikož ale bude aplikace napsaná v Blazor frameworku, jeví se jako řešení použít knihovnu napsanou přímo pro Blazor. Použijeme tedy knihovnu Blazor Bootstrap, což je knihovna využívající výhody základní knihovny, ale převádí je do Blazor komponent. Toto nám tedy umožní používat Bootstrap ale vše bude silně typované a nebude docházet k nefungujícímu UI kvůli překlepům.
+
+
+\subsection{Způsob ukládání dat}
+Jelikož chceme, aby data zůstala uchována a zároveň nad nimi bylo možné efektivně provádět dotazy i s nimi manipulovat, je vhodné je uložit do databázového systému.
+
+Před výběrem databázového systému si rozmyslíme, jaké údaje vlastně budeme chtít ukládat.
+
+\begin{itemize}
+  \item Údaje o hráči
+  \item Jednotlivé hráče týmu
+  \item Adresa hrací místnosti turnaje
+  \item Jak bude turnaj losován a další organizační záležitosti
+  \item Registrované hráči na turnaji
+  \item Registrováné týmy na turnaji
+  \item Rozlosování pro všechna kola
+  \item Výsledky zápasů
+  \item Výsledky jednotlivých podzápasů v případě týmového turnaje
+  \item Nastavení daného turnaje
+\end{itemize}
+
+Z těchto údajů je vidět pár hlavních entit - Hráč, Tým, Turnaj, Kolo turnaje, Zápas, Nastavení turnaje.
+Lépe tyto entity a jejich závislosti můžeme vidět na UML diagramu níže. Navíc jsou zde uvedeny jejich základní atributy.
+
+
+UML DIAGRAM
+
+Nad těmito daty budou prováděny dotazy na získání informací, které uživatelé budou potřebovat. Tyto dotazy nebudou, dle akcí uvedených v předešlých kapitolách, agregačního charakteru.
+
+
+\subsubsection{Relační databáze}
+
+Relační databáze vznikly již ve 20. století a jsou to tedy robustní prověřené systémy, které vám umožňují ukládat data v tabulkách a velmi dobře udržovat jejich konzistenci. Když se ale podíváme na UML diagram vidíme, že většina entit má velmi málo, někdy dokonce žádné potencionální sloupce. Naopak vidíme velké množství propojení a vazeb typu M:N, které by při dotazování databáze způsobily několik propojení tabulek a tudíž výrazné prodloužení reakční doby aplikace. Relační databáze jsou vhodné CHYBÍ ZDROJ na data, která mezi sebou nemají velké množství vazeb, což dle UML diagramu neplatí. Nesmíme opomenout ale výhodu relačních databází, která spočívá v udržování konzistence dat. Jelikož ale bude databáze využívána pouze jedinou aplikací, nebude tato výhoda hrát zásadní roli. Z těchto důvodů tedy relační databáze nebudou vhodnou volbou pro ukládaní dat.
+
+\subsubsection{Dokumentové databáze}
+
+Budeme tedy hledat dále v sekci nerelačních datazí. Začneme databázemi dokumentovými. Tento druh nemá jasně dané schéma a je velmi variabilní. Naše data ale mají mezi sebou jasně definované vazby a entity téměř ve všech případech budou mít stejné vlastnoti. Volné schéma se by tedy bylo spíše kontraproduktivní. Dokumentové databáze nejsou též vhodné pro data s vazbami typu M:N, což naše data obsahují. Tento typ se tedy nejeví jako ideální kandidát.
+
+\subsubsection{Databáze typu klíč-hodnota}
+
+Přestože nám databáze typu klíč-hodnota poskytují flexibilní schéma, vysokou rychlost a škálovatelnost jeví se jako velmi nevhodný kandidát s důvodu neexistující podpory vztahu mezi daty. Naše aplikace bude obsahovat velké množství těchto vztahů, tudíž tuto možnost zamítáme.
+
+\subsubsection{Grafové databáze}
+
+Nyní budeme pokračovat grafovými databázemi. Hlavní výhodu můžeme nalézt v hranách, kterými můžeme reprezentovat vztahy mezi daty. Dle UML diagramu komplexita těchto propojení není triviální a grafová databáze by nám umožnila tyto informace efektivně ukládat. Slabé stránky můžeme nalézt v agregačním dotazech, které ale téměř nebudeme využívat. Naopak ale bude vynikat v dotazech, které vyžadují procházení jednotlivých entit po propojeních, což bude zahrnovat netriviální množství dotazů.
+
+\subsubsection{Sloupcové databáze}
+
+Dále se zaměříme na další typ nerelačních databází - sloupcové databáze. Tento typ nám umožňuje efektivní provádění dotazů nad sloupci, což bychom ale využili pouze při provádění analýzy dat jednotlivých údajů, což v našem případě nepatří mezi typické dotazy. Jako výhodu můžeme určitě nalézt v efektivitě ukládání dat, které poté zabírají méně místa na disku a tudíž rychlejší provádění dotazu. Sloupcové databáze ale mají podobný problém jako databáze relační - ukládání je prováděno do tabulek, což v našem případě velkého množství propojení tento typ databáze nestaví do pozice ideálního kandidáta.
+
+
+\subsubsection{Konečný výběr databázového systému}
+Z těchto důvodu se jako nejvhodnější pro naší aplikaci jeví grafová databáze z důvodu velkého množství propojení entit a snadného zachycení komplexních informací, které by nebylo snadné uložit v databázových systémech s fixním datovým modelem. Jako konkrétní systém byl zvolen Neo4j, se kterým bude snadné komunikovat z důvodu oficiálního Nugget balíčku od tvůrců této databáze. Zároveň pro mnohaletý vývoj a rozšířenost umožní bezproblémový vývoj aplikace.
+
+
+
+\end{document}

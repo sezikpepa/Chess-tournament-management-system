@@ -1,0 +1,43 @@
+﻿
+@* Handles location settings of the tournament *@
+
+@using ChessTournamentManager.Controllers
+@using DatabaseCommunicator.Models
+
+@inject TournamentSettingsController TournamentSettingsController
+
+@rendermode InteractiveServer
+
+
+<AddressForm AddressDefaultValue="_tournamentAddress" AddressSubmited="Submit"></AddressForm>
+
+@code {
+
+	/// <summary>
+	/// Id of the tournament
+	/// </summary>
+	[Parameter]
+	public string TournamentId { get; set; }
+
+	/// <summary>
+	/// Address of the tournament
+	/// </summary>
+	private Address? _tournamentAddress;
+
+	protected override async Task OnInitializedAsync()
+	{
+		_tournamentAddress = await TournamentSettingsController.GetTournamentAddress(TournamentId);
+		await InvokeAsync(StateHasChanged);
+	}
+
+	/// <summary>
+	/// Saves the filled address
+	/// </summary>
+	/// <param name="address"></param>
+	/// <returns></returns>
+	public async Task Submit(Address address)
+	{
+		await TournamentSettingsController.SaveTournamentAddress(TournamentId, address);
+	}
+
+}

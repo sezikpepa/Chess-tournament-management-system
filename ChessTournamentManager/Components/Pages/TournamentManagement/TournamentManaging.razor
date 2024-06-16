@@ -1,0 +1,116 @@
+﻿
+@* Page which shows all tournaments which are managed by a logged user. *@
+
+@page "/manageTournaments"
+
+@attribute [Authorize]
+
+@rendermode @(new InteractiveServerRenderMode(false))
+@attribute [StreamRendering]
+
+@using ChessTournamentManager.CodeStructures
+@using ChessTournamentManager.Controllers
+@using ChessTournamentManager.Data
+@using ChessTournamentManager.DataServices
+@using ChessTournamentManager.LanguageAssets.TournamentManagementLabels
+@using ChessTournamentMate.Shared;
+@using DatabaseCommunicator.Models
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.Extensions.Localization
+@using TournamentLibrary.Participants;
+@using TournamentLibrary.TournamentParts;
+
+@using Microsoft.AspNetCore.SignalR.Client
+@inject NavigationManager Navigation
+@inject NavigationUrls NavigationToUrls
+@inject UserInformation UserInformation
+
+@inject TournamentManagingController TournamentManagingController
+@inject IStringLocalizer<TournamentManagementLabels> _localizer
+
+
+<title>@_localizer["managedTournamentsTitle"]</title>
+
+<QuestionMarkWithHelp ToolTipText="@_localizer["managedTournamentsTooltip"]"></QuestionMarkWithHelp>
+
+@if (!_loading && !_errorOccured)
+{
+    <TournamentCardSlideShow Tournaments="_managedTournaments.ToList()"
+                             ShowTournamentInformation="true"
+                             TournamentInformationCallBack="OnTournamentInformation"
+                             ShowManagerTournament="true"
+                             ManagerTournamentCallBack="OnManageTournament">
+    </TournamentCardSlideShow>
+
+    @if (_managedTournaments.Count() == 0)
+    {
+        <UIResponseRender Message="@(new NotExistsInDatabase(_localizer["noManagedTournamentsWereFound"]))"></UIResponseRender>
+    }
+}
+
+<Spinner Visible="_loading"></Spinner>
+
+<ConnectionToDatabaseFailed Visible="_errorOccured"></ConnectionToDatabaseFailed>
+
+@code {
+
+    /// <summary>
+    /// All tournaments managed by a logged user
+    /// </summary>
+    private IEnumerable<Tournament> _managedTournaments = [];
+
+    /// <summary>
+    /// Page is still loading
+    /// </summary>
+    private bool _loading = true;
+
+    private bool _errorOccured = false;
+
+    /// <summary>
+    /// Shows page where it is possible to manage selected team
+    /// </summary>
+    /// <param name="tournamentId">Id if the tournament</param>
+    public void OnManageTournament(string tournamentId)
+    {
+        NavigationToUrls.ToTournamentManagementPage(tournamentId);
+    }
+
+    /// <summary>
+    /// Shows page with information about the tournament
+    /// </summary>
+    /// <param name="tournamentId">Id if the tournament</param>
+    public void OnTournamentInformation(string tournamentId)
+    {
+        NavigationToUrls.ToTournamentPageForPlayer(tournamentId);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _loading = true;
+        await InvokeAsync(StateHasChanged);
+
+        try
+        {
+            string accountId = (await UserInformation.GetLoggedUserIdAsync())!;
+
+            await Task.WhenAll(GetManagedTournaments(accountId), Task.Delay(300));
+        }
+        catch
+        {
+            _errorOccured = true;
+        }
+
+        _loading = false;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    /// <summary>
+    /// Retreives all managed tournaments from database
+    /// </summary>
+    /// <param name="accountId">AccoutId of the logged user</param>
+    /// <returns></returns>
+    public async Task GetManagedTournaments(string accountId)
+    {
+        _managedTournaments = await TournamentManagingController.GetManagedTournaments(accountId);
+    }
+}

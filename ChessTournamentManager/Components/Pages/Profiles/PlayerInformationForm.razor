@@ -1,0 +1,166 @@
+﻿
+@* Page where users can edit own personal information show are shown on their profile *@
+
+@page "/editProfile/{AccountId}"
+
+@rendermode @(new InteractiveServerRenderMode(false))
+@attribute [StreamRendering]
+
+@using Blazor.Flags
+@using ChessTournamentManager.CodeStructures
+@using ChessTournamentManager.Controllers
+@using ChessTournamentManager.DataServices
+@using ChessTournamentManager.LanguageAssets.Profiles
+@using ChessTournamentMate.Shared
+@using ChessTournamentMate.Shared.QuickResponseMessages
+@using DatabaseCommunicator.Models
+@using Microsoft.Extensions.Localization
+
+@inject OwnProfileController OwnProfileController;
+@inject NavigationUrls NavigationUrls
+@inject IStringLocalizer<ProfilesLabels> _localizer;
+
+<title>@_localizer["formTitle"]</title>
+
+
+<QuestionMarkWithHelp ToolTipText="@_localizer["formTooltip"]">
+
+</QuestionMarkWithHelp>
+
+
+<Button Color="ButtonColor.Success" @onclick="() => NavigationUrls.ToMyAccount()">@_localizer["formBackToProfileButton"]</Button>
+
+
+<div class="mt-3">
+	<UIResponseMessageDisappear Message="@_message"></UIResponseMessageDisappear>
+</div>
+
+
+
+<EditForm class="mt-3" OnValidSubmit="@SavePlayerInformation" FormName="PlayerInformationForm" Model="@Model">
+	<DataAnnotationsValidator />
+	<ValidationSummary />
+
+	<div class="row">
+		<div class="col-xl-4">
+			<label class="form-label">@_localizer["formFirstName"]</label>
+			<InputText class="form-control" @bind-Value="Model.FirstName"></InputText>
+		</div>
+		<div class="col-xl-4">
+			<label class="form-label">@_localizer["formMiddleName"]</label>
+			<InputText class="form-control" @bind-Value="Model.MiddleName"></InputText>
+		</div>
+		<div class="col-xl-4">
+			<label class="form-label">@_localizer["formLastName"]</label>
+			<InputText class="form-control" @bind-Value="Model.LastName"></InputText>
+		</div>
+	</div>
+
+	<div class="row">
+		<div class="col-md-6 col-xl-4">
+			<label class="form-label">@_localizer["formDateOfBirth"]</label>
+			<DateInput EnableMinMax="@true" Min="@(new DateTime(1900, 1, 1))" Max="@(DateTime.Now)" class="form-control" @bind-Value="Model.DateOfBirth"></DateInput>
+		</div>
+		<div class="col-md-6 col-xl-4">
+			<label class="form-label">@_localizer["formElo"]</label>
+			<NumberInput AllowNegativeNumbers="@false" class="form-control" @bind-Value="Model.Elo"></NumberInput>
+		</div>
+		<div class="col-md-6 col-xl-4">
+			<label class="form-label">@_localizer["formFideId"]</label>
+			<InputText class="form-control" @bind-Value="Model.FideId"></InputText>
+		</div>
+		<div class="col-md-6 col-xl-4">
+			<label class="form-label">@_localizer["formClub"]</label>
+			<InputText class="form-control" @bind-Value="Model.ChessClub"></InputText>
+		</div>
+		<div class="col-xl-8">
+			<label class="form-label">@_localizer["formCountry"]</label>
+			<InputSelect class="form-select" TValue="string" @bind-Value="Model.Country">
+				@foreach (Country country in CountriesMethods.AvailableCountries)
+				{
+					<option value="@country.Name()">@_localizer[country.Name()]</option>
+				}
+			</InputSelect>
+		</div>
+	</div>
+
+	<div class="mt-3">
+		<div class="row">
+			<div class="col-12 col-xl-2">
+				<Button Class="form-control" Color="ButtonColor.Success" Type="ButtonType.Submit">@_localizer["formSaveButton"]</Button>
+			</div>
+		</div>
+	</div>
+
+</EditForm>
+
+@if(Model.Id != null)
+{
+	<div class="mt-5">
+		<div class="row">
+			<h3>@_localizer["formProfilePictureHeading"]</h3>
+		</div>
+		
+		<UploadProfilePictureForm ForElement="@Model.Id"></UploadProfilePictureForm>
+	</div>
+}
+
+@code {
+
+	[SupplyParameterFromForm]
+	public Player Model { get; set; } = new();
+
+	[Parameter]
+	public string AccountId { get; set; }
+
+	private QuickResponseMessage? _message;
+
+	/// <summary>
+	/// Saves the personal information about player in the database
+	/// </summary>
+	/// <returns></returns>
+	public async Task SavePlayerInformation()
+	{
+		Model.AccountId = AccountId;
+		try
+		{
+			await OwnProfileController.UpdatePlayerProfile(Model);
+		}
+		catch
+		{
+			_message = new UnsuccessfulMessage() { Comment = _localizer["formCannotBeSavedError"] };
+			await InvokeAsync(StateHasChanged);
+			return;
+		}
+
+		_message = new SuccessfulMessage() { Comment = _localizer["formWasSaved"] };
+		await InvokeAsync(StateHasChanged);
+	}
+
+	protected override async Task OnInitializedAsync()
+	{
+		Player? result;
+		try
+		{
+			result = await OwnProfileController.GetAcountInformation(AccountId);
+		}
+		catch
+		{
+			_message = new UnsuccessfulMessage() { Comment = _localizer["formCannotBeLoadedError"] };
+			await InvokeAsync(StateHasChanged);
+			return;
+		}
+		if(result is not null)
+		{
+			Model = result;
+		}
+
+		if(Model.Country is null)
+		{
+			Model.Country = Country.CZ.Name();
+		}
+
+		await InvokeAsync(StateHasChanged);
+	}
+
+}

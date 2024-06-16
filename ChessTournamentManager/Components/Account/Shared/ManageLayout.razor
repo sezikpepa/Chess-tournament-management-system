@@ -1,0 +1,21 @@
+﻿@using ChessTournamentManager.LanguageAssets.Account
+@using Microsoft.Extensions.Localization
+@inherits LayoutComponentBase
+@layout AccountLayout
+
+@inject IStringLocalizer<AccountLabels> _localizer
+
+<h1>@_localizer["manageLayoutHeading"]</h1>
+
+<div>
+    <h2>@_localizer["manageLayoutHeading2"]</h2>
+    <hr />
+    <div class="row">
+        <div class="col-md-3">
+            <ManageNavMenu />
+        </div>
+        <div class="col-md-9">
+            @Body
+        </div>
+    </div>
+</div>

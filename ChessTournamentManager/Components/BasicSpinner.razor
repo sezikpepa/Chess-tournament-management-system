@@ -1,0 +1,14 @@
+﻿
+@* Spinner used in the entire application. This component is used because if the spinner looks would change it would change the look of spinner in the entire application.
+ *@
+<Spinner Visible="@Visible"></Spinner>
+
+@code {
+
+	/// <summary>
+	/// If sets to false, spinner is hidden, otherwise shown
+	/// </summary>
+	[Parameter]
+	public bool Visible { get; set; } = true;
+
+}

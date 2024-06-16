@@ -1,0 +1,81 @@
+﻿
+@* Retrives matches of the playoff tournament and shows them as playoff bracket. (Team tournament) *@
+
+@using ChessTournamentManager.Components.TournamentTabs.Results
+@using ChessTournamentManager.Components.TournamentTabs.Results.PlayOffBracketParts
+@using ChessTournamentManager.Controllers
+@using ChessTournamentManager.DataServices
+@using DatabaseCommunicator.Models
+@using TournamentLibrary.TournamentParts
+
+
+@inject TournamentController TournamentController
+@inject RoundDrawController RoundDrawController
+
+<PlayoffTable ForHowManyPlayers="(int)Math.Pow(2, Math.Ceiling(Math.Log2(_participantsCount)))" RoundDraws="_roundDraws"></PlayoffTable>
+
+
+@code {
+
+	/// <summary>
+	/// Id of the tournament
+	/// </summary>
+	[Parameter]
+	public string TournamentId { get; set; }
+
+	/// <summary>
+	/// Information about the tournament
+	/// </summary>
+	private Tournament? _tournamentInformation;
+
+	/// <summary>
+	/// Matches of each round in the tournament
+	/// </summary>
+	private List<RoundDraw<Team>?> _roundDraws = [];
+
+	/// <summary>
+	/// How many participants plays in the tournament
+	/// </summary>
+	private int _participantsCount;
+
+
+	protected override async Task OnInitializedAsync()
+	{
+		await GetInformationForPlayOffTable();
+	}
+
+	public async Task ReloadData()
+	{
+		await GetInformationForPlayOffTable();
+		await InvokeAsync(StateHasChanged);
+	}
+
+	/// <summary>
+	/// Retreives information about the tournament, so it generates correct playoff bracket
+	/// </summary>
+	/// <returns></returns>
+	private async Task GetInformationForPlayOffTable()
+	{
+		_tournamentInformation = await TournamentController.GetTournamentInformation(TournamentId);
+		_participantsCount = (await TournamentController.GetRegisteredTeamsWithPlayers(TournamentId)).Count();
+
+		_roundDraws = [];
+
+		if (!_tournamentInformation!.HasStarted)
+		{
+			return;
+		}
+		for (int i = 1; i <= _tournamentInformation!.ExpectedNumberOfRounds; i++)
+		{
+			var roundDraw = (await RoundDrawController.GetRoundDrawTeam(TournamentId, i));
+			if (roundDraw.HasValue)
+			{
+				_roundDraws.Add(roundDraw.Value.Item1);
+			}
+			else
+			{
+				_roundDraws.Add(null);
+			}
+		}
+	}
+}

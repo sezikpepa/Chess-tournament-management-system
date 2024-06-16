@@ -1,0 +1,28 @@
+﻿
+@* If the user has not filled own profile, he/she cannot do certain actions. This message is then shown to warn the user. *@
+
+@using ChessTournamentManager.CodeStructures
+@using ChessTournamentManager.LanguageAssets.PlayerService
+@using ChessTournamentMate.Shared
+@using Microsoft.Extensions.Localization
+
+
+@inject UserInformation UserInformation
+@inject NavigationUrls NavigationUrls
+@inject IStringLocalizer<PlayerServiceLabels> _localizer
+
+@rendermode InteractiveServer
+
+<UIResponseRender Message="@(new NotExistsInDatabase(Message))"></UIResponseRender>
+
+<Button Color="ButtonColor.Success" @onclick="async () => NavigationUrls.ToEditProfilePage((await UserInformation.GetLoggedUserIdAsync())!)">@_localizer["editPlayerInformationButton"]</Button>
+
+@code {
+
+	/// <summary>
+	/// Message which will be shown if the user does not have complete profile
+	/// </summary>
+	[Parameter]
+	public string Message { get; set; } = "You can create new tournament only after completion of your profile, this button will forward you to page, where you can complete it";
+
+}

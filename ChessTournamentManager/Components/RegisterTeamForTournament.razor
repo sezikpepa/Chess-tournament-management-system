@@ -1,0 +1,206 @@
+﻿@* 
+Handles registration procedure to the tournament for teams *@
+
+@using ChessTournamentManager.CodeStructures
+@using ChessTournamentManager.Components.Account
+@using ChessTournamentManager.Controllers
+@using ChessTournamentManager.Data
+@using ChessTournamentManager.DataServices
+@using ChessTournamentManager.LanguageAssets.TournamentRegistration
+@using ChessTournamentMate.Shared
+@using ChessTournamentMate.Shared.QuickResponseMessages
+@using DatabaseCommunicator.Models
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.Extensions.Localization
+
+@inject NavigationManager Navigation
+@inject UserInformation UserInformation
+
+@inject TeamManagementController TeamManagementController
+@inject TournamentRegistrationController TournamentRegistrationController
+@inject TournamentSettingsController TournamentSettingsController
+
+@inject NavigationUrls NavigationUrls
+@inject IStringLocalizer<TournamentRegistrationLabels> _localizer
+
+
+@* dle vzoru https://www.learmoreseekmore.com/2020/12/blazorwasm-inputradiogroup-overview.html *@
+
+<UIResponseRender Message="_message"></UIResponseRender>
+
+<UIResponseRender Message="_messageAboutTeamRegister"></UIResponseRender>
+
+<div>
+    <EditForm OnValidSubmit="RegisterTeam" Model="selectedTeam">
+		<InputRadioGroup @bind-Value="selectedTeam.TeamId">
+            @foreach (var team in ManagedTeams)
+            {
+				<div class="row mt-2" @onclick="() => TeamSelectionChanged(team.Team.Id)">
+					<label>
+						<Card Class="showClickable">
+							<CardBody>
+								<div class="row">
+									<div class="col-11">
+										<InputRadio class="showClickable" Value="team.Team.Id" /> @team.Team.Name
+										<div class="row">
+											<div class="ms-3 mt-2">
+												@team.GetFirstNumberOfPlayersAsString(4)
+											</div>									
+										</div>
+									</div>
+									<div class="col-1">
+										<div class="showClickable" @onclick="() => NavigationUrls.ToTeamManagementPage(team.Team.Id)">
+											<Icon Size="IconSize.x5" Name="IconName.Search"></Icon>
+										</div>						
+									</div>
+								</div>
+							</CardBody>
+						</Card>
+					</label>
+				</div>
+
+
+            }
+        </InputRadioGroup>
+
+        @if(ManagedTeams.Count() != 0 && _canRegister == true)
+        {
+			<div class="mt-3">
+				<Button Color="ButtonColor.Success" Type="ButtonType.Submit">@_localizer["registerTeamButton"]</Button>
+			</div>
+        }
+    </EditForm>
+</div>
+
+@code {
+
+	/// <summary>
+	/// Id of the tournament
+	/// </summary>
+	[Parameter]
+	public string TournamentId { get; set; }
+
+	/// <summary>
+	/// Id of the logged user
+	/// </summary>
+	private string? _accountId;
+
+	/// <summary>
+	/// Message in the UI
+	/// </summary>
+	private QuickResponseMessage? _message;
+
+	/// <summary>
+	/// Message in the UI which shows if the team can register to tournament or not
+	/// </summary>
+	private QuickResponseMessage? _messageAboutTeamRegister;
+
+	/// <summary>
+	/// True - team can register to tournament, False - it cannot
+	/// </summary>
+	private bool? _canRegister;
+
+	/// <summary>
+	/// Which team is selected - all information are shown about this team
+	/// </summary>
+	public SelectedTeam selectedTeam = new();
+
+	/// <summary>
+	/// Class for object, where the selected team information is stored - bypass so it works with form
+	/// </summary>
+	public class SelectedTeam
+	{
+		public string? TeamId { get; set; }
+	}
+
+	/// <summary>
+	/// All teams which are managed by a logged user, they are shown in the UI
+	/// </summary>
+	public IEnumerable<TeamWithPlayers> ManagedTeams { get; set; } = [];
+
+
+	protected override async Task OnInitializedAsync()
+	{
+		await GetManagedTeams();
+		await InvokeAsync(StateHasChanged);
+	}
+
+	/// <summary>
+	/// Gets information if the team can register to the tournament
+	/// </summary>
+	/// <param name="teamId">Id of the team</param>
+	/// <returns></returns>
+	private async Task<QuickResponseMessage> CanTeamRegister(string teamId)
+	{
+		return await TournamentRegistrationController.CanTeamRegisterToTournament(TournamentId, teamId);
+	}
+
+	/// <summary>
+	/// Retreives all teams from the database, which are managed by a logged user
+	/// </summary>
+	/// <returns></returns>
+	public async Task GetManagedTeams()
+	{
+		_accountId ??= await UserInformation.GetLoggedUserIdAsync();
+		ManagedTeams = [];
+		_message = null;
+		try
+		{
+			ManagedTeams = await TeamManagementController.GetManagedTeams(_accountId);
+		}
+		catch
+		{
+			_message = new UnsuccessfulMessage(_localizer["registerTeamCannotGetManagedTeams"]);
+			await InvokeAsync(StateHasChanged);
+			return;
+		}
+
+		if (ManagedTeams.Count() == 0)
+		{
+			_message = new NotExistsInDatabase(_localizer["registerTeamNoManagedTeams"]);
+			return;
+		}
+	}
+
+	/// <summary>
+	/// Register selected team to the tournament
+	/// </summary>
+	/// <returns></returns>
+	public async Task RegisterTeam()
+	{
+		var canRegister = await CanTeamRegister(selectedTeam.TeamId!);
+		if(canRegister.MessageType != QuickResponseMessageTypes.Success)
+		{
+			_messageAboutTeamRegister = canRegister;
+			await InvokeAsync(StateHasChanged);
+		}
+		try
+		{
+			await TournamentRegistrationController.RegisterTeamInTournament(TournamentId, selectedTeam.TeamId!);
+			selectedTeam.TeamId = null;
+		}
+		catch
+		{
+			_messageAboutTeamRegister = new UnsuccessfulMessage(_localizer["registerTeamError"]);
+			await InvokeAsync(StateHasChanged);
+			return;
+		}
+
+		_messageAboutTeamRegister = new SuccessfulMessage(_localizer["registrationTeamWasRegistered"]);
+		await InvokeAsync(StateHasChanged);
+	}
+
+	/// <summary>
+	/// Updates information if the team can register, if the selected team was changed
+	/// </summary>
+	/// <param name="teamId"></param>
+	/// <returns></returns>
+	private async Task TeamSelectionChanged(string teamId)
+	{
+		_messageAboutTeamRegister = await CanTeamRegister(teamId);
+		_canRegister = _messageAboutTeamRegister.MessageType == QuickResponseMessageTypes.Success;
+		_message = null;
+
+		await InvokeAsync(StateHasChanged);
+	}
+}

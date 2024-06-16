@@ -1,0 +1,43 @@
+﻿
+@* Provides selection of language of the application. Then it saves it and sets the language in the application based on selected value. *@
+
+@using System.Globalization
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+@* modified code from https://github.com/claudiobernasconi/BlazorLocalization *@
+
+<div class="pe-3">
+    <select class="form-select" @bind="Culture">
+        <option value="en-US">English</option>
+        <option value="cs-CZ">Čeština</option>
+    </select>
+</div>
+
+@code
+{
+    protected override void OnInitialized()
+    {
+        Culture = CultureInfo.CurrentCulture;
+    }
+
+    private CultureInfo Culture
+    {
+        get
+        {
+            return CultureInfo.CurrentCulture;
+        }
+        set
+        {
+            //Sets selected language in the entire application
+            if (CultureInfo.CurrentCulture != value)
+            {
+                var uri = new Uri(Navigation.Uri).GetComponents(UriComponents.PathAndQuery, UriFormat.Unescaped);
+                var cultureEscaped = Uri.EscapeDataString(value.Name);
+                var uriEscaped = Uri.EscapeDataString(uri);
+
+                Navigation.NavigateTo($"Culture/Set?culture={cultureEscaped}&redirectUri={uriEscaped}", forceLoad: true);
+            }
+        }
+    }
+}

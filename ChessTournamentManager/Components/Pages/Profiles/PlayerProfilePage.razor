@@ -1,0 +1,105 @@
+﻿
+@* Page where profile of a logged user is shown *@
+
+@page "/myProfile"
+
+@rendermode @(new InteractiveServerRenderMode(false))
+@attribute [StreamRendering]
+
+@using ChessTournamentManager.CodeStructures
+@using ChessTournamentManager.Components.Account
+@using ChessTournamentManager.Controllers
+@using ChessTournamentManager.Data
+@using ChessTournamentManager.DataServices
+@using ChessTournamentManager.LanguageAssets.Profiles
+@using ChessTournamentMate.Shared
+@using Microsoft.AspNetCore.Authorization
+
+@attribute [Authorize]
+
+@using DatabaseCommunicator.Models;
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.Extensions.Localization
+@using TournamentLibrary.Participants;
+@using TournamentLibrary.TournamentHandlers;
+
+@inject UserInformation UserInformation
+@inject OwnProfileController OwnProfileController
+@inject NavigationUrls NavigationUrls
+@inject IStringLocalizer<ProfilesLabels> _localizer
+
+<title>@_localizer["myProfileTitle"]</title>
+
+<ConnectionToDatabaseFailed Visible="_errorOccured"></ConnectionToDatabaseFailed>
+
+@if (_loaded)
+{
+	<QuestionMarkWithHelp ToolTipText="@_localizer["accountTooltip"]" />
+
+	<div class="row">
+		<div class="col-12 col-md-3 col-xl-2">
+			<Button Class="form-control" Color="ButtonColor.Success" @onclick="() => NavigationUrls.ToEditProfilePage(_accountId)">@_localizer["accountEditProfileButton"]</Button>
+		</div>
+	</div>
+
+	@if (_playerId is not null)
+	{
+		<div class="mt-3">
+			<PlayerProfileLoading PlayerId="@_playerId"></PlayerProfileLoading>
+		</div>
+	}
+	else
+	{
+		<div class="mt-3">
+			<UIResponseRender Message="@(new NotExistsInDatabase(_localizer["acountDoesNotExist"]))"></UIResponseRender>
+		</div>
+	}
+}
+
+
+
+@code {
+
+	/// <summary>
+	/// Id of the player which should be shown
+	/// </summary>
+	private string? _playerId;
+
+	/// <summary>
+	/// AccountId of the logged user
+	/// </summary>
+	private string? _accountId;
+
+	/// <summary>
+	/// All data were retreived
+	/// </summary>
+	private bool _loaded = false;
+
+	private bool _errorOccured = false;
+
+	protected override async Task OnInitializedAsync()
+	{
+		try
+		{
+			_accountId = await UserInformation.GetLoggedUserIdAsync();
+
+			await GetIdOfAccount();
+			_loaded = true;
+			await InvokeAsync(StateHasChanged);
+		}
+		catch
+		{
+			_errorOccured = true;
+		}
+
+	}
+
+	/// <summary>
+	/// Gets id of the player - logged user
+	/// </summary>
+	/// <returns></returns>
+	private async Task GetIdOfAccount()
+	{
+		_playerId = await OwnProfileController.GetId(_accountId);
+	}
+}

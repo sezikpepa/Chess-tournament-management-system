@@ -1,0 +1,71 @@
+﻿version: '3.8'
+
+services:
+  neo4j:
+    image: neo4j:5.16.0
+    container_name: neo4jdatabase
+    ports:
+      - "7687:7687"
+    environment:
+      NEO4J_AUTH: neo4j/12345678
+      LANG: C.UTF-8
+    volumes:
+      - neo4j_data:/data
+      - ./data.cypher:/data/data.cypher
+      
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    container_name: sqlserverdatabaseaccounts
+    environment:
+      ACCEPT_EULA: Y
+      SA_PASSWORD: YourStrongPassword123!
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    
+  crateaccountdatabase:
+    image: mcr.microsoft.com/mssql-tools
+    depends_on:
+      - sqlserver
+    environment:
+      - RUN_SCRIPT=${RUN_SCRIPT:-true}
+    command: >
+      bash -c '
+      if [ "$${RUN_SCRIPT,,}" = "true" ]; then
+          echo "Running script to create database structure..."
+          sleep 90 && /opt/mssql-tools/bin/sqlcmd -S sqlserverdatabaseaccounts -U SA -P YourStrongPassword123! -i /docker-entrypoint-initdb.d/initCreate.sql && /opt/mssql-tools/bin/sqlcmd -S sqlserverdatabaseaccounts -U SA -P YourStrongPassword123! -i /docker-entrypoint-initdb.d/init.sql
+      else
+          echo "Skipping script which creates database structure..."
+      fi
+      '
+
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./initCreate.sql:/docker-entrypoint-initdb.d/initCreate.sql
+    
+
+  chesstournamentmanagerweb:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "9000:8080"
+      - "8081:8081"
+    depends_on:
+      - neo4j
+      - sqlserver
+      - crateaccountdatabase
+    user: root
+    volumes:
+      - pictures:/app/wwwroot/ProfilePictures
+    command: chmod -R 777 /app/ProfilePictures
+
+volumes:
+  neo4j_data:
+  sqlserver_data:
+  pictures:
+  
+  
+  
+  

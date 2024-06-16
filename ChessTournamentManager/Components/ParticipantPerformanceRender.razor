@@ -1,0 +1,70 @@
+﻿
+@* Shows matches of specific player in the tournament. *@
+
+@using ChessTournamentManager.LanguageAssets.TournamentManagementLabels
+@using DatabaseCommunicator.Models
+@using Microsoft.Extensions.Localization
+@using TournamentLibrary.TournamentParts
+
+@rendermode @(new InteractiveServerRenderMode(false))
+
+
+@inject IStringLocalizer<TournamentManagementLabels> _localizer
+
+
+
+<h1>@_localizer["performanceForPlayer"] @ForPlayer?.DisplayName</h1>
+
+<div class="table-responsive">
+	<table class="table">
+		<thead>
+			<tr>
+				<th>@_localizer["performanceAgainst"]</th>
+				<th>@_localizer["performanceResult"]</th>
+				<th>@_localizer["performanceColor"]</th>
+			</tr>
+		</thead>
+		<tbody>
+			@for (int i = 0; i < Matches?.Count; i++)
+			{
+				<tr>
+					@if (Matches[i].White.Id == ForPlayer.Id)
+					{
+						<td>@Matches[i].Black.DisplayName</td>
+						<td>@Matches[i].Result.WhitePoints</td>
+						<td class="table-light"></td>
+					}
+					else
+					{
+						<td>@Matches[i].White.DisplayName</td>
+						<td>@Matches[i].Result.BlackPoints</td>
+						<td class="table-dark"></td>
+					}
+				</tr>
+			}
+
+		</tbody>
+	</table>
+</div>
+
+
+
+@code {
+
+	/// <summary>
+	/// Matches of the player in the tournament.
+	/// </summary>
+	[Parameter]
+	public List<RoundPair<Player>> Matches { get; set; } = [];
+
+	/// <summary>
+	/// Specific player which playes in all matches which are shown.
+	/// </summary>
+	[Parameter]
+	public Player? ForPlayer { get; set; }
+
+	protected override void OnParametersSet()
+	{
+		InvokeAsync(StateHasChanged);
+	}
+}

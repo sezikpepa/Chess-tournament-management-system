@@ -1,0 +1,53 @@
+﻿
+@* Selects component which will retrive results from the database and shows them as a table. (Single or team tournament) *@
+
+@using ChessTournamentManager.Controllers
+@using DatabaseCommunicator.Models
+@using TournamentLibrary.Participants
+@using TournamentLibrary.TournamentParts
+
+@rendermode @(new InteractiveServerRenderMode(false))
+
+
+@inject TournamentController TournamentController
+
+@if (IsTeam)
+{
+	<RoundRobinTableTeam @ref="_roundRobinTableTeam" TournamentId="@TournamentId"></RoundRobinTableTeam>
+}
+else
+{
+	<RoundRobinTableSingle @ref="_roundRobinTableSingle" TournamentId="@TournamentId"></RoundRobinTableSingle>
+}
+
+@code {
+
+	/// <summary>
+	/// Id of the tournament
+	/// </summary>
+	[Parameter]
+	public string TournamentId { get; set; }
+
+	/// <summary>
+	/// True - tournament is for teams, False - tournament is for single players.
+	/// </summary>
+	[Parameter]
+	public bool IsTeam { get; set; }
+
+	private RoundRobinTableTeam _roundRobinTableTeam = default!;
+
+	private RoundRobinTableSingle _roundRobinTableSingle = default!;
+
+	public async Task ReloadData()
+	{
+		if (IsTeam && _roundRobinTableTeam is not null)
+		{
+			await _roundRobinTableTeam.ReloadData();
+		}
+		else if (_roundRobinTableSingle is not null)
+		{
+			await _roundRobinTableSingle.ReloadData();
+		}
+	}
+
+}

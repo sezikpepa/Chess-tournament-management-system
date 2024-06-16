@@ -1,0 +1,48 @@
+﻿@using ChessTournamentManager.LanguageAssets.TournamentForParticipants
+@using DatabaseCommunicator.Models
+@using Microsoft.Extensions.Localization
+
+@inject IStringLocalizer<TournamentForParticipantsLabels> _localizer
+
+
+@inject IJSRuntime JSRuntime;
+
+
+<ul class="list-group list-group-horizontal">
+	<li class="list-group-item w-50 p-3">@_localizer["prepositionAddress"]</li>
+	<li class="list-group-item w-50 p-3">
+		@if (Address is not null)
+		{
+			<div class="row">
+				<div class="col-11">
+					@Address.ToString()
+				</div>
+				<div class="col-1">
+					@if(Address is not null && Address.IsFilled)
+					{
+						<div class="showClickable" @onclick="async () => await ShowAddress()">
+							<Icon Size="IconSize.x5" Name="IconName.Search"></Icon>
+						</div>
+					}					
+				</div>
+			</div>
+		}
+
+	</li>
+</ul>
+
+
+@code {
+
+	[Parameter]
+	public Address? Address { get; set; }
+
+	/// <summary>
+	/// Redirect to mapy.cz page where it will shown exact location of the tournament
+	/// </summary>
+	/// <returns></returns>
+	private async Task ShowAddress()
+	{
+		await JSRuntime.InvokeVoidAsync("open", "https://mapy.cz/zakladni?q=" + Address!.ToString() + "&source=addr&z=17", "_blank");
+	}
+}

@@ -1,0 +1,257 @@
+﻿
+@* Shows list of players in the UI *@
+
+@using ChessTournamentManager.CodeStructures
+@using ChessTournamentManager.Controllers
+@using ChessTournamentManager.DataServices
+@using ChessTournamentManager.DataServices.Filters
+@using ChessTournamentManager.LanguageAssets.PlayerService
+@using ChessTournamentMate.Shared
+@using ChessTournamentMate.Shared.QuickResponseMessages
+@using DatabaseCommunicator.Models
+@using Microsoft.Extensions.Localization
+@inject NavigationManager Navigation
+
+@inject PlayerController PlayerController
+
+@inherits LoadableComponent
+
+@rendermode @(new InteractiveServerRenderMode(false))
+
+
+@inject IStringLocalizer<PlayerServiceLabels> _localizator
+
+
+<EditForm Model="_filter" OnValidSubmit="SearchPlayers">
+
+	<div class="row">
+		<div class="col-12 col-xl-6">
+			<label class="form-label">@_localizator["playerFirstNameForm"]</label>
+			<InputText class="form-control" @bind-Value="_filter.FirstName"></InputText>
+		</div>
+		<div class="col-12 col-xl-6">
+			<label class="form-label">@_localizator["playerLastNameForm"]</label>
+			<InputText class="form-control" @bind-Value="_filter.LastName"></InputText>
+		</div>
+		<div class="col-12 col-xl-6">
+			<label class="form-label">@_localizator["playerClubForm"]</label>
+			<InputText class="form-control" @bind-Value="_filter.ClubName"></InputText>
+		</div>
+	</div>
+
+	<div class="col-12 col-xl-2">
+		<Button Class="mt-3 form-control" Color="ButtonColor.Success" Type="ButtonType.Submit">@_localizator["searchButton"]</Button>
+	</div>
+
+</EditForm>
+
+<div class="mt-3">
+	<BasicSpinner Visible="_loading"></BasicSpinner>
+</div>
+
+@if (!_loading)
+{
+	@if (Players is not null)
+	{
+		if (_totalNumberOfPlayers > 0)
+		{
+			<div class="mt-3">
+				<Pagination ActivePageNumber="@_currentPageNumber"
+							TotalPages="@((int)(Math.Ceiling((decimal)(_totalNumberOfPlayers / (decimal)_numberOfPlayersPerPage))))"
+							PageChanged="OnPageChanged"
+							FirstLinkIcon="IconName.ChevronDoubleLeft"
+							PreviousLinkIcon="IconName.ChevronLeft"
+							NextLinkIcon="IconName.ChevronRight"
+							LastLinkIcon="IconName.ChevronDoubleRight" />
+			</div>
+
+			<div class="table-responsive">
+				<table class="table table-striped">
+					<thead>
+						<tr>
+							<th class="col col-xl-3">@_localizator["playersResultFirstName"]</th>
+							<th class="col col-xl-3">@_localizator["playersResultLastName"]</th>
+							<th class="col col-xl-3">@_localizator["playersResultClub"]</th>
+							@if (!HideAction)
+							{
+								<th class="col col-xl-2"></th>
+							}
+							<th class="col col-xl-1"></th>
+						</tr>
+					</thead>
+					<tbody>
+						@foreach (var participant in Players)
+						{
+							<tr>
+								<th class="col col-xl-3">@participant.FirstName</th>
+								<th class="col col-xl-3">@participant.LastName</th>
+								<th class="col col-xl-3">@participant.ChessClub</th>
+								@if (!HideAction)
+								{
+									<th class="col col-xl-2"><Button Disabled="@PlayersWithDisabledAction.Contains(participant)" @onclick="() => PerformAction(participant)">@ActionName</Button></th>
+								}
+								<th class="col col-xl-1">
+									<Button Color="ButtonColor.Primary" Disabled="participant.AccountId is null" @onclick="async () => await ShowPlayerProfile.InvokeAsync(participant.Id)">
+										<Icon Name="IconName.Search"></Icon>
+									</Button>
+								</th>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</div>
+			
+		}
+		else
+		{
+			<div class="mt-3">
+				<UIResponseRender Message="_message"></UIResponseRender>
+			</div>
+		}
+
+	}
+}
+
+
+@code {
+
+	/// <summary>
+	/// Method which should handle clicking on the button with action
+	/// </summary>
+	[Parameter]
+	public EventCallback<Player> PlayerSelectedAction { get; set; }
+
+	/// <summary>
+	/// Players which does not have profile
+	/// </summary>
+	[Parameter]
+	public List<Player> PlayersWithDisabledAction { get; set; } = [];
+
+	/// <summary>
+	/// Method which should handle showing of the page with player information
+	/// </summary>
+	[Parameter]
+	public EventCallback<string> ShowPlayerProfile { get; set; }
+
+	/// <summary>
+	/// Special action should not be shown in the UI
+	/// </summary>
+	[Parameter]
+	public bool HideAction { get; set; } = false;
+
+	/// <summary>
+	/// Players which will be shown in the UI
+	/// </summary>
+	private IEnumerable<Player>? Players = [];
+
+	private QuickResponseMessage? _message;
+
+	/// <summary>
+	/// Requirements on the players which should be shown in the UI
+	/// </summary>
+	private PlayerServiceFilter _filter = new();
+
+	/// <summary>
+	/// How many players satisfy the requirements
+	/// </summary>
+	private long _totalNumberOfPlayers = 0;
+
+	/// <summary>
+	/// How many players should be shown on page in the UI
+	/// </summary>
+	private int _numberOfPlayersPerPage = 10;
+
+	private int _currentPageNumber = 1;
+
+	/// <summary>
+	/// Text of the button, which trigers special action
+	/// </summary>
+	[Parameter]
+	public string? ActionName { get; set; }
+
+	protected override async Task OnParametersSetAsync()
+	{
+		await InvokeAsync(StateHasChanged);
+	}
+
+	protected override async Task OnInitializedAsync()
+	{
+		try
+		{
+			await SearchPlayers();
+		}
+		catch
+		{
+			_message = new UnsuccessfulMessage(_localizator["playersResultCannotGetPlayers"]);
+			await InvokeAsync(StateHasChanged);
+		}
+		_loading = false;
+	}
+
+	/// <summary>
+	/// Trigger special action with specific player
+	/// </summary>
+	/// <param name="player">Information about the player</param>
+	/// <returns></returns>
+	private async Task PerformAction(Player player)
+	{
+		await PlayerSelectedAction.InvokeAsync(player);
+	}
+
+	/// <summary>
+	/// Reloads players if the page changes
+	/// </summary>
+	/// <param name="newPageNumber"></param>
+	/// <returns></returns>
+	private async Task OnPageChanged(int newPageNumber)
+	{
+		_currentPageNumber = newPageNumber;
+		await GetPlayersPart();
+	}
+
+	/// <summary>
+	/// Retreives players from the database for specific page
+	/// </summary>
+	/// <returns></returns>
+	public async Task GetPlayersPart()
+	{
+		Players = [];
+		_message = null;
+		try
+		{
+			Players = await PlayerController.GetAllPlayersAsync(_filter, (_currentPageNumber - 1) * _numberOfPlayersPerPage, _numberOfPlayersPerPage);
+		}
+		catch
+		{
+			_message = new UnsuccessfulMessage(_localizator["playersResultCannotGetPlayers"]);
+			await InvokeAsync(StateHasChanged);
+			return;
+		}
+
+		if(Players.Count() == 0)
+		{
+			_message = new NotExistsInDatabase(_localizator["playersResultNoPlayers"]);
+		}
+
+		await InvokeAsync(StateHasChanged);
+	}
+
+	/// <summary>
+	/// Sets how many players specify the requirements and load the part of the players for selected part
+	/// </summary>
+	/// <returns></returns>
+	public async Task SearchPlayers()
+	{
+		_loading = true;
+		DateTime loadStartTime = DateTime.Now;
+		await InvokeAsync(StateHasChanged);
+
+		_currentPageNumber = 1;
+		_totalNumberOfPlayers = await PlayerController.GetTotalNumberOfPlayers(_filter);
+		await GetPlayersPart();
+
+		await WaitMinimumTime(loadStartTime, 300);
+
+		_loading = false;
+	}
+}

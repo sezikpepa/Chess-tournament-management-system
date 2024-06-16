@@ -1,0 +1,51 @@
+﻿@* Retrives results from the database and shows them in the UI as the table. (Team tournament) *@
+
+@using ChessTournamentManager.Controllers
+@using DatabaseCommunicator.Models
+@using TournamentLibrary.Participants
+@using TournamentLibrary.TournamentParts
+
+@rendermode @(new InteractiveServerRenderMode(false))
+
+
+@inject TournamentController TournamentController
+
+
+<RoundRobinTableView Participants="@_registeredTeams" PairsWithResults="@_pairsWithResults"></RoundRobinTableView>
+
+
+@code {
+
+	/// <summary>
+	/// Id of the tournament
+	/// </summary>
+	[Parameter]
+	public string TournamentId { get; set; }
+
+	/// <summary>
+	/// All matches of the tournament
+	/// </summary>
+	private List<RoundPair<Team>> _pairsWithResults { get; set; } = [];
+
+	/// <summary>
+	/// All teams registered in the tournament
+	/// </summary>
+	private List<Team> _registeredTeams { get; set; } = [];
+
+	protected override async Task OnInitializedAsync()
+	{
+		await ReloadData();
+	}
+
+	/// <summary>
+	/// Retreives all information for round robin table from database
+	/// </summary>
+	/// <returns></returns>
+	public async Task ReloadData()
+	{
+		_pairsWithResults = await TournamentController.GetAllTournamentPairsTeamsAsync(TournamentId);
+		_pairsWithResults = _pairsWithResults.Where(x => x.WhiteScore > 0 || x.BlackScore > 0).ToList();
+		_registeredTeams = (await TournamentController.GetRegisteredTeamsWithPlayers(TournamentId)).Select(x => x.Team).ToList();
+		await InvokeAsync(StateHasChanged);
+	}
+}

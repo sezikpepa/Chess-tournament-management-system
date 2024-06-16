@@ -1,0 +1,8 @@
+﻿.spaceForResultAndTeamNames {
+    display: flex;
+    justify-content: space-between;
+}
+
+.showClickable:hover {
+    cursor: pointer
+}

@@ -1,0 +1,189 @@
+﻿
+@* Page which shows informations about tournamant. Users cannot edit the tournament, only see values. *@
+
+@page "/tournamentInformation/{TournamentId}"
+
+@rendermode @(new InteractiveServerRenderMode(false))
+@attribute [StreamRendering]
+
+@using ChessTournamentManager.CodeStructures
+@using ChessTournamentManager.Components.Pages.TournamentManagement
+@using ChessTournamentManager.Components.TournamentTabs
+@using ChessTournamentManager.Components.TournamentTabs.Draws
+@using ChessTournamentManager.Components.TournamentTabs.Results
+@using ChessTournamentManager.Controllers
+@using ChessTournamentManager.LanguageAssets.TournamentForParticipants
+@using ChessTournamentMate.Shared
+@using ChessTournamentMate.Shared.QuickResponseMessages
+@using DatabaseCommunicator.Models
+@using Microsoft.Extensions.Localization
+@using ChessTournamentManager.Components.TournamentTabs.Prepositions
+
+@inject TournamentController TournamentController
+@inject PlayerController PlayerController
+@inject OwnProfileController OwnProfileController
+
+@inject UserInformation UserInformation
+@inject IStringLocalizer<TournamentForParticipantsLabels> _localizer
+
+<title>@_localizer["title"]</title>
+
+@if(_tournament is not null)
+{
+
+    <AuthorizeView>
+        @if(_isTouramentFavourite is not null)
+        {
+            if (_isTouramentFavourite.Value)
+            {
+                <Button Class="mb-3" Color="ButtonColor.Danger" @onclick="UnMarkTournamentAsFavourite">@_localizer["mainUnmarkTournamentAsFavourite"]</Button>
+            }
+            else
+            {
+                <Button Class="mb-3" Color="ButtonColor.Success" @onclick="MarkTournamentAsFavourite">@_localizer["mainMarkTournamentAsFavourite"]</Button>
+            }
+        }
+    </AuthorizeView>
+
+
+    <Tabs>
+        <Tab Title="@_localizer["mainTabsPreposition"]" IsActive="true">
+            <Content>
+                <TournamentPrepositionPage TournamentId="@TournamentId"></TournamentPrepositionPage>
+            </Content>
+        </Tab>
+        <Tab Title="@_localizer["mainTabsPlayers"]">
+            <Content>
+                <RegisteredParticipantsRender TournamentId="@TournamentId" DisableEdit="true"></RegisteredParticipantsRender>
+            </Content>
+        </Tab>
+        @if (_tournament.IsTeam)
+        {
+            <Tab Title="@_localizer["mainTabsTeams"]">
+                <Content>
+                    <CascadingValue Name="DisableEditing" Value="true">
+                        <RegisteredTeamsWithPlayers TournamentId="@TournamentId"></RegisteredTeamsWithPlayers>
+                    </CascadingValue>
+                </Content>
+            </Tab>
+        }
+        <Tab Disabled="!_tournament!.HasStarted" Title="@_localizer["mainTabsDraws"]">
+            <Content>
+                <CascadingValue Name="DisableEditing" Value="true">
+                    <PlayerDrawRoundNumberSelection TournamentId="@TournamentId" IsTeamTournament="@_tournament.IsTeam" CurrentRoundNumber="@_tournament!.CurrentRound" HowManyRounds="@_tournament.ExpectedNumberOfRounds"></PlayerDrawRoundNumberSelection>
+                </CascadingValue>
+            </Content>
+        </Tab>
+        <Tab Disabled="!_tournament!.HasStarted" Title="@_localizer["mainTabsResults"]">
+            <Content>
+                <ResultViewSelection TournamentId="@TournamentId" RoundNumber="@_tournament!.CurrentRound" IsTeam="@_tournament.IsTeam"></ResultViewSelection>
+            </Content>
+        </Tab>
+    </Tabs>
+
+
+}
+
+else
+{
+    <UIResponseRender Message="_message"></UIResponseRender>
+}
+
+
+
+@code {
+
+    /// <summary>
+    /// Id of the tournament
+    /// </summary>
+    [Parameter]
+    public string TournamentId { get; set; }
+
+    /// <summary>
+    /// Information about the tournament
+    /// </summary>
+    private Tournament? _tournament;
+
+    /// <summary>
+    /// Information if the logged user marked the tournament as favourite
+    /// </summary>
+    private bool? _isTouramentFavourite;
+
+    /// <summary>
+    /// Message in the UI
+    /// </summary>
+    private QuickResponseMessage? _message;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetTournamentInformation();
+        await GetTournamentFavouritness();
+    }
+
+    /// <summary>
+    /// Retreives information about the tournament
+    /// </summary>
+    /// <returns></returns>
+    private async Task GetTournamentInformation()
+    {
+        _message = null;
+        _tournament = await TournamentController.GetTournamentInformation(TournamentId);
+        if(_tournament is null)
+        {
+            _message = new NotExistsInDatabase(_localizer["mainNotExistingTournament"]);
+        }
+
+    }
+
+    /// <summary>
+    /// Retreives information if the logged user marked tournament as favourite
+    /// </summary>
+    /// <returns></returns>
+    private async Task GetTournamentFavouritness()
+    {
+        string? accountId = await UserInformation.GetLoggedUserIdAsync();
+        bool isAccountFilled = await OwnProfileController.AccountHasFilledProfile(accountId);
+        if (isAccountFilled == false)
+        {
+            return;
+        }
+        if(accountId is not null)
+        {
+            _isTouramentFavourite = await PlayerController.GetTournamentFavouritnessForAccount(accountId, TournamentId);
+        }
+        else
+        {
+            _isTouramentFavourite = null;
+        }
+    }
+
+    /// <summary>
+    /// Marks tournament as favourite for logged user
+    /// </summary>
+    /// <returns></returns>
+    private async Task MarkTournamentAsFavourite()
+    {
+        string? id = await UserInformation.GetLoggedUserIdAsync();
+        if(id is not null)
+        {
+            await PlayerController.MarkTournamentAsFavourite(id, TournamentId);
+            _isTouramentFavourite = true;
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+    /// <summary>
+    /// Unmarks tournament as favourite for logged user
+    /// </summary>
+    /// <returns></returns>
+    private async Task UnMarkTournamentAsFavourite()
+    {
+        string? id = await UserInformation.GetLoggedUserIdAsync();
+        if (id is not null)
+        {
+            await PlayerController.UnMarkTournamentAsFavourite(id, TournamentId);
+            _isTouramentFavourite = false;
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+}

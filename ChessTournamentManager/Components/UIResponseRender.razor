@@ -1,0 +1,39 @@
+﻿@using ChessTournamentMate.Shared
+
+
+@rendermode InteractiveServer
+
+
+@if (Message is not null)
+{
+	@switch (Message.MessageType)
+	{
+		case QuickResponseMessageTypes.NotExistsInDatabase:
+			_color = AlertColor.Warning;
+			break;
+		case QuickResponseMessageTypes.Success:
+			_color = AlertColor.Success;
+			break;
+		case QuickResponseMessageTypes.Error:
+			_color = AlertColor.Danger;
+			break;
+	}
+	<Alert Color="@_color">@Message.Comment</Alert>
+}
+
+
+
+@code {
+
+	/// <summary>
+	/// Message which should be shown in the warning
+	/// </summary>
+	[Parameter]
+	public QuickResponseMessage Message { get; set; }
+
+	/// <summary>
+	/// Color of the shown message
+	/// </summary>
+	private AlertColor _color;
+
+}

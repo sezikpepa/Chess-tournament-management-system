@@ -1,0 +1,277 @@
+﻿
+@* Page where it is possible to manage the tournament - register players, generate pairing, generate results... *@
+
+@page "/manageTournament/{TournamentId}"
+
+@rendermode @(new InteractiveServerRenderMode(false))
+@attribute [StreamRendering]
+
+@attribute [Authorize]
+
+
+@using ChessTournamentManager.CodeStructures
+@using ChessTournamentManager.Components.TournamentTabs.Draws
+@using ChessTournamentManager.Components.TournamentTabs.Results
+@using ChessTournamentManager.Components.TournamentTabs
+@using ChessTournamentManager.Components.TournamentTabs.TournamentSettings
+@using ChessTournamentManager.Controllers
+@using ChessTournamentManager.Data
+@using ChessTournamentManager.DataServices
+@using ChessTournamentManager.LanguageAssets.TournamentManagementLabels
+@using ChessTournamentMate.Shared;
+@using DatabaseCommunicator.Models;
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.Extensions.Localization
+@using TournamentLibrary.Participants;
+@using TournamentLibrary.TournamentParts;
+
+
+@inject TournamentController TournamentController
+
+@inject TournamentManagingController TournamentManagingController
+
+@inject TournamentHandlerFactory<Player> TournamentHandlerFactory
+
+@inject NavigationUrls NavigationUrls
+
+@inject UserInformation UserInformation
+
+@inject IStringLocalizer<TournamentManagementLabels> _localizer
+
+<title>@_localizer["mainPageTitle"]</title>
+
+
+@if (_isLoading)
+{
+	<BasicSpinner></BasicSpinner>
+}
+else
+{
+	<ConfirmDialog @ref="_deleteTournamentDialog" />
+
+	<div class="col-12 col-md-8 col-xl-3">
+		<Button Class="form-control" Color="ButtonColor.Success" @onclick="() => NavigationUrls.ToManageTournamentsPage()">@_localizer["mainPageBackToManagedTournamentsButton"]</Button>
+	</div>
+
+
+
+	@if (_isManager)
+	{	
+		@if(Tournament is not null)
+		{
+			@if (!Tournament.HasStarted)
+			{
+				<div class="row mt-2">
+					<div class="col-12 col-md-6 col-lg-3 mt-1">
+						<Button Class="form-control" Color="ButtonColor.Success" @onclick="OnTournamentStartClick">@_localizer["mainPageStartTournamentButton"]</Button>
+					</div>
+					<div class="col-12 col-md-6 col-lg-3 mt-1">
+							<Button Class="form-control" Color="ButtonColor.Danger" @onclick="DeleteTournament">@_localizer["mainPageDeleteTournamentButton"]</Button>
+					</div>
+				</div>
+			}
+		}
+	
+		<div class="mt-3">
+			<UIResponseMessageDisappear Message="_message"></UIResponseMessageDisappear>
+		</div>
+
+		@if (Tournament is not null)
+		{
+
+			<Tabs Class="mt-3" OnHidden="TabChanged" @ref="_tabs">
+				<Tab Title="@_localizer["mainPageTabRegisteredPlayers"]" IsActive="true" OnClick="async () => await _registeredParticipantsRender!.ReloadData()">
+					<Content>
+						<RegisteredParticipantsRender @ref="_registeredParticipantsRender" TournamentId="@TournamentId"></RegisteredParticipantsRender>
+					</Content>
+				</Tab>
+				@if (Tournament.IsTeam)
+				{
+					<Tab Title="@_localizer["mainPageTabRegisteredTeams"]" OnClick="async () => await _registeredTeamsRender!.ReloadData()">
+						<Content>
+							<RegisteredTeamsWithPlayers @ref="_registeredTeamsRender" TournamentId="@TournamentId"></RegisteredTeamsWithPlayers>
+						</Content>
+					</Tab>
+				}
+				@if (!Tournament.IsTeam)
+				{
+					<Tab Disabled="Tournament!.HasStarted" Title="@_localizer["mainPageTabRegisterPlayer"]">
+						<Content>
+							<TournamentPlayerInsertRender TournamentId="@TournamentId"></TournamentPlayerInsertRender>
+						</Content>
+					</Tab>
+				}
+				<Tab Disabled="!Tournament!.HasStarted" Title="@_localizer["mainPageTabDraws"]">
+					<Content>
+						<CascadingValue Name="IsDrawPossible" Value="TournamentHandlerFactory.CreateTournamentHandler(Tournament.TournamentType).IsDrawPossible">
+							<PlayerDrawRoundNumberSelection TournamentHandler="TournamentHandlerFactory.CreateTournamentHandler(Tournament.TournamentType)" MoveToNextRoundCallBack="OnMoveToNextRound" TournamentId="@TournamentId" IsTeamTournament="@Tournament.IsTeam" CurrentRoundNumber="@Tournament!.CurrentRound" HowManyRounds="@Tournament.ExpectedNumberOfRounds"></PlayerDrawRoundNumberSelection>
+						</CascadingValue>
+					</Content>
+				</Tab>
+				<Tab Title="@_localizer["mainPageTabResults"]" Disabled="!Tournament!.HasStarted" OnClick="() => _resultViewSelection!.Reload()">
+					<Content>
+						<ResultViewSelection @ref="_resultViewSelection" TournamentId="@TournamentId" RoundNumber="@Tournament!.CurrentRound" IsTeam="@Tournament.IsTeam"></ResultViewSelection>
+					</Content>
+				</Tab>
+					<Tab Disabled="Tournament!.HasStarted" Title="@_localizer["mainPageTabSettings"]">
+						<Content>
+							<TournamentSettingsTab TournamentType="@Tournament?.TournamentType" TournamentId="@TournamentId" IsTeamTournament="@Tournament!.IsTeam"></TournamentSettingsTab>
+						</Content>
+					</Tab>
+			</Tabs>
+		}
+	}
+
+	else
+	{
+		<div class="mt-3">
+			<UIResponseRender Message="@(new UnsuccessfulMessage(_localizer["mainPageNotAManager"]))"></UIResponseRender>
+		</div>
+	}
+}
+
+
+
+
+@code {
+
+	/// <summary>
+	/// Id of the tournament
+	/// </summary>
+	[Parameter]
+	public string TournamentId { get; set; }
+
+	/// <summary>
+	/// Information about tournament
+	/// </summary>
+	public Tournament? Tournament { get; set; }
+
+	/// <summary>
+	/// Message in the UI
+	/// </summary>
+	private QuickResponseMessage? _message;
+
+	/// <summary>
+	/// Logged user is the manager of the tournament
+	/// </summary>
+	private bool _isManager = false;
+
+	/// <summary>
+	/// Page is still loading
+	/// </summary>
+	private bool _isLoading = true;
+
+	private RegisteredParticipantsRender? _registeredParticipantsRender;
+
+	private RegisteredTeamsWithPlayers? _registeredTeamsRender;
+
+	private ResultViewSelection? _resultViewSelection;
+
+	private ConfirmDialog _deleteTournamentDialog = default!;
+
+	private Tabs _tabs = default!;
+
+	protected override async Task OnInitializedAsync()
+	{
+		_isLoading = true;
+		await GetTournamentInformation();
+		_isManager = await IsUserManagerOfTournament();
+		_isLoading = false;
+		await InvokeAsync(StateHasChanged);
+	}
+
+	/// <summary>
+	/// Retreives information if the user is the manager of the tournament
+	/// </summary>
+	/// <returns></returns>
+	private async Task<bool> IsUserManagerOfTournament()
+	{
+		string accountId = (await UserInformation.GetLoggedUserIdAsync())!;
+
+		return await TournamentManagingController.IsManagerOfTournament(TournamentId, accountId);
+	}
+
+	/// <summary>
+	/// Retreives information about the tournament from database
+	/// </summary>
+	/// <returns></returns>
+	public async Task GetTournamentInformation()
+	{
+		Tournament = await TournamentController.GetTournamentInformation(TournamentId);
+
+		await InvokeAsync(StateHasChanged);
+	}
+
+	private async Task TabChanged()
+	{
+		_message = null;
+		await InvokeAsync(StateHasChanged);
+	}
+
+	/// <summary>
+	/// Starts new round in the tournament
+	/// </summary>
+	/// <returns></returns>
+	public async Task OnMoveToNextRound()
+	{
+		await TournamentManagingController.StartNewRoundAsync(TournamentId);
+		Tournament!.CurrentRound++;
+		await InvokeAsync(StateHasChanged);
+	}
+
+	/// <summary>
+	/// Starts the tournament
+	/// </summary>
+	/// <param name="e"></param>
+	/// <returns></returns>
+	private async Task OnTournamentStartClick(MouseEventArgs e)
+	{
+		QuickResponseMessage resultMessage;
+		try
+		{
+			resultMessage = await TournamentManagingController.StartTournamentAsync(TournamentId);
+		}
+		catch
+		{
+			resultMessage = new UnsuccessfulMessage(_localizer["mainPageCannotStartTournamentError"]);
+			await InvokeAsync(StateHasChanged);
+			return;
+		}
+
+		await GetTournamentInformation();
+
+		await _tabs.ShowFirstTabAsync();
+		_message = resultMessage;
+		await InvokeAsync(StateHasChanged);
+	}
+
+	/// <summary>
+	/// Deletes the tournament from database
+	/// </summary>
+	/// <returns></returns>
+	private async Task DeleteTournament()
+	{
+		var buttonsTexts = new ConfirmDialogOptions
+			{
+				YesButtonText = _localizer["mainPageDeleteTournamentDialogYes"],
+				YesButtonColor = ButtonColor.Danger,
+				NoButtonText = _localizer["mainPageDeleteTournamentDialogNo"],
+				NoButtonColor = ButtonColor.Secondary
+			};
+
+		bool delete = await _deleteTournamentDialog.ShowAsync(title: _localizer["mainPageDeleteTournamentDialogHeader"], message1: _localizer["mainPageDeleteTournamentDialogDescription"], buttonsTexts);
+		if (delete)
+		{
+			try
+			{
+				await TournamentManagingController.DeleteTournament(TournamentId);
+			}
+			catch
+			{
+				_message = new UnsuccessfulMessage(_localizer["mainPageCannotDeleteTournamentError"]);
+				return;
+			}
+			NavigationUrls.ToManageTournamentsPage();
+		}
+	}
+}

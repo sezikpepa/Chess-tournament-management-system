@@ -1,0 +1,36 @@
+﻿@* 
+Shows basic save and cancel button group *@
+
+@using ChessTournamentManager.LanguageAssets.TournamentManagementLabels
+@using Microsoft.Extensions.Localization
+
+@inject IStringLocalizer<TournamentManagementLabels> _localizer
+
+@if (Visible)
+{
+	<Button Color="ButtonColor.Success" @onclick="@OnSaveChanges">@_localizer["save"]</Button>
+	<Button Color="ButtonColor.Danger" @onclick="@OnCancelChanges">@_localizer["cancel"]</Button>
+}
+
+
+@code {
+
+	/// <summary>
+	/// Method which should handle save procedure
+	/// </summary>
+	[Parameter]
+	public EventCallback OnSaveChanges { get; set; }
+
+	/// <summary>
+	/// Method which should handle cancel procedure
+	/// </summary>
+	[Parameter]
+	public EventCallback OnCancelChanges { get; set; }
+
+	/// <summary>
+	/// True - this component will be shown, False - this component will not be shown
+	/// </summary>
+	[Parameter]
+	public bool Visible { get; set; } = true;
+
+}
