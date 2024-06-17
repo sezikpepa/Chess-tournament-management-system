@@ -1,4 +1,8 @@
 
+-----------------------------------------------
+Při jakýchkoliv dotazech či problémech se spuštěním jsem k dispozici na josef.sezemskyy@gmail.com
+-----------------------------------------------
+
 ------------------------------------------------
 JAK SPUSTIT APLIKACI
 ------------------------------------------------
