@@ -2,7 +2,7 @@
 -----------------------------------------------
 Při jakýchkoliv dotazech či problémech se spuštěním jsem k dispozici na josef.sezemskyy@gmail.com
 -----------------------------------------------
-
+Doprovodny text k programu včetně uživatelské a programátorské dokumentace se nachází v souboru "Textová část.pdf"
 ------------------------------------------------
 JAK SPUSTIT APLIKACI
 ------------------------------------------------
